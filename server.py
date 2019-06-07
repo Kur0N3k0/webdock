@@ -10,78 +10,25 @@ from models.user import User
 from models.dockers import Dockers
 from models.dockerfile import Dockerfile
 
+from database import mongo
+
 log = logging.Logger("webdock")
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/webdock"
-mongo = PyMongo(app)
+mongo.init_app(app)
 m_uuid = FlaskUUID()
 m_uuid.init_app(app)
 
-def login_check():
-    return session.get("username") != None
+from routers.user import user_api
+app.register_blueprint(user_api)
+
+login_check = lambda: session.get("username") != None
 
 @app.route("/")
 @app.route("/index")
 def index():
     return render_template("index.html")
-
-#
-# User route
-#
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
-    if login_check() == True:
-        return ""
-
-    if request.method == "GET":
-        return render_template("user/signup.html")
-
-    elif request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        db: wrappers.Collection = mongo.db.users
-        result = db.find_one({ "username": username })
-        if result != None:
-            return "exist user"
-
-        u_uuid = uuid.uuid4()
-        user = User(username, password, u_uuid)
-        db.insert_one(user.__dict__)
-
-        session["username"] = username
-        session["uuid"] = u_uuid
-
-    return redirect("/docker")
-
-@app.route("/signin", methods=["GET", "POST"])
-def signin():
-    """
-    POST
-    :param username: username
-    :param password: password
-    """
-    if request.method == "GET":
-        return render_template("user/signin.html")
-    elif request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        db: wrappers.Collection = mongo.db.users
-        result: User = db.find_one({ "username": username, "password": password })
-        if result == None:
-            return ""
-
-        session["username"] = username
-        session["uuid"] = result.uuid
-
-    return redirect("/docker")
-
-@app.route("/logout", methods=["GET"])
-def logout():
-    session.clear()
-    return index()
 
 #
 # Dockers route
@@ -90,15 +37,27 @@ def logout():
 @app.route("/docker/list")
 def docker_list():
     if login_check() == False:
-        return ""
+        return render_template("fail.html")
     
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.docker
-    result: Dockers = db.find({ "uid": uid })
+    result: list = db.find({ "uid": uid })
     if result == None:
-        return ""
+        return render_template("fail.html")
 
     return render_template("docker/list.html", docker=result)
+
+@app.route("/docker/images")
+def docker_images():
+    if login_check() == False:
+        return render_template("fail.html")
+
+@app.route("/docker/containers")
+def docker_containers():
+    if login_check() == False:
+        return render_template("fail.html")
+    
+    
 
 @app.route("/docker/<uuid:sid>/status")
 def docker_status(sid: uuid.UUID, methods=["GET"]):
@@ -106,12 +65,12 @@ def docker_status(sid: uuid.UUID, methods=["GET"]):
     :param sid: docker uuid
     """
     if login_check() == False:
-        return ""
+        return render_template("fail.html")
     
     db: wrappers.Collection = mongo.db.docker
     result: Dockers = db.find_one({ "uuid": sid })
     if result == None:
-        return ""
+        return render_template("fail.html")
 
     return result.status
 
@@ -125,6 +84,8 @@ def docker_install(uid: uuid.UUID):
     :param tag: docker tag
     :param ver: container version
     :parma dockfile: dockerfile uuid
+
+    build Dockerfile
     """
     if login_check() == False:
         return render_template("fail.html")
@@ -140,7 +101,7 @@ def docker_install(uid: uuid.UUID):
 
     docker = Dockers(uid, "", tag, ver, "installing", vm_uuid)
     db: wrappers.Collection = mongo.db.docker
-    db.insert_one(docker)
+    db.insert_one(docker.__dict__)
 
     # search Dockerfile
     df: wrappers.Collection = mongo.db.dockerfile
@@ -235,10 +196,6 @@ def docker_stop(sid: uuid.UUID, methods=["GET"]):
 
     return "stop"
 
-@app.route("/docker/images")
-def docker_images():
-    return ""
-
 #
 # Dockersfile route
 #
@@ -278,7 +235,7 @@ def dockerfile_view(fn_uuid: uuid.UUID):
 
     db: wrappers.Collection = mongo.db.dockerfile
     uid = session.get("uuid")
-    result: Dockersfile = db.find_one({ "uid": uid, "uuid": fn_uuid })
+    result: Dockerfile = db.find_one({ "uid": uid, "uuid": fn_uuid })
     if result == None:
         return render_template("fail.html")
 
@@ -298,10 +255,6 @@ def dockerfile_save():
 @app.route("/payment")
 def payment():
     return render_template("payment/index.html")
-
-#
-# 
-#
 
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)
