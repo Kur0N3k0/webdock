@@ -1,6 +1,7 @@
 from functools import wraps
 from flask import session, redirect
 from flask_pymongo import pymongo
+import copy
 
 def login_required(func):
     @wraps(func)
@@ -30,16 +31,17 @@ def deserialize_json(cls=None, data=None):
             instance = object.__new__(cls)
             for key, value in item.items():
                 setattr(instance, key, value)
-            r += [instance]
+            r += [copy.deepcopy(instance)]
         return r
     elif isinstance(data, pymongo.cursor.Cursor):
         cursor: pymongo.cursor.Cursor = data
         r = []
-        for i in range(cursor.count()):
+        for item in cursor:
             instance = object.__new__(cls)
-            for item in cursor:
-                for key, value in item.items():
-                    setattr(instance, key, value)
+            for key, value in item.items():
+                setattr(instance, key, value)
+                print(key, value)
+            print('')
             r += [instance]
         return r
     else:

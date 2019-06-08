@@ -30,7 +30,8 @@ def signup():
         db.insert_one(user.__dict__)
 
         session["username"] = username
-        session["uuid"] = u_uuid
+        session["uuid"] = str(u_uuid)
+        session["level"] = 0
 
     return redirect("/docker")
 
@@ -53,7 +54,7 @@ def signin():
             return "<script>alert('user not found'); history.back(-1);</script>"
 
         session["username"] = username
-        session["uuid"] = result.uuid
+        session["uuid"] = str(result.uuid)
         session["level"] = result.level
 
     return redirect("/docker")

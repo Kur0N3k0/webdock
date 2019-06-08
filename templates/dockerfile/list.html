@@ -23,7 +23,7 @@
                             <tbody>
                                 {% for dockerfile in dockerfiles %}
                                 <tr>
-                                    <td>haha</td>
+                                    <td>{{ dockerfile.path }}</td>
                                     <td>{{ dockerfile.uuid }}</td>
                                     <td>{{ dockerfile.date }}</td>
                                 </tr>
@@ -69,8 +69,10 @@
                                 type: "POST",
                                 success: function(result) {
                                     console.log(result);
+                                    location.reload();
                                 }
                             });
+                            
                         });
                     });
                 </script>
