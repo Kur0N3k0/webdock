@@ -1,49 +1,38 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <!-- Compiled and minified CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/app.css') }}" />
+
+        <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+        <!-- Compiled and minified JavaScript -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
         <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     </head>
     <body>
         <header>
-            <div class="header">
-                <h1>
-                    <a href="/" class="link-logo">
-                        <img src="https://manage.conoha.jp/Content/Images/ConoHa/Common/logo.png" alt="logo">
+            <nav>
+                <div class="nav-wrapper white">
+                    <a href="/" class="brand-logo" style="padding: 5px;">
+                        <!--https://manage.conoha.jp/Content/Images/ConoHa/Common/logo.png-->
+                        <img src="x" alt="logo">
                     </a>
-                </h1>
-                <ul class="header-menu">
-                    <li>
-                        <a href="#">
-                            <span>VPS</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+                </div>
+            </nav>
         </header>
-        <div class="container">
-            <aside>
-                <nav>
-                    <ul>
-                        <li class="menu">
-                            <a href="#">Image</a>
-                        </li>
-                        <li class="menu">
-                            <a href="#">Container</a>
-                        </li>
-                        <li class="menu">
-                            <a href="#">Dockerfile</a>
-                        </li>
-                        <li class="menu">
-                            <a href="#">Payment</a>
-                        </li>
-                    </ul>
-                </nav>
-            </aside>
-            <section class="content">
-                {% block content %}
-                {% endblock %}
-            </section>
-        </div>
+        <ul id="slide-out" class="sidenav sidenav-fixed blue lighten-5">
+            <li><a class="subheader"><i class="material-icons">Docker</i></a></li>
+            <li><a href="#!">Image</a></li>
+            <li><a href="#!">Container</a></li>
+            <li><a href="#!">Dockerfile</a></li>
+            <li><div class="divider"></div></li>
+            <li><a class="subheader">Payment</a></li>
+            <li><a class="waves-effect" href="#!">setting</a></li>
+        </ul>
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
     </body>
 </html>

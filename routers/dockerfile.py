@@ -5,7 +5,7 @@ from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 from werkzeug.utils import secure_filename
 
-from models.dockers import Dockers
+from models.image import Image
 from models.dockerfile import Dockerfile
 from database import mongo
 

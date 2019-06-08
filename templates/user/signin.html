@@ -1,11 +1,24 @@
 {% extends 'layout.html' %}
 {% block content %}
-        <header>
-
-        </header>
-        <section>
-            <article>
-                signin
-            </article>
-        </section>
+                <div class="row">
+                    <div class="col s3"></div>
+                    <div class="col s6 m6">
+                        <form class="card" action="/signin" method="POST" name="singin">
+                            <div class="card-content black-text">
+                                <div class="input-field">
+                                    <input type="text" class="validate black-text" id="username" name="username">
+                                    <label for="username" class="black-text">username</label>
+                                </div>
+                                <div class="input-field">
+                                    <input type="password" class="validate black-text" id="password" name="password">
+                                    <label for="password" class="black-text">password</label>
+                                </div>
+                            </div>
+                            <div class="card-action center-align">
+                                <a class="waves-effect waves-light btn" onclick="document.forms['singin'].submit()">Login</a>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col s3"></div>
+                </div>
 {% endblock %}

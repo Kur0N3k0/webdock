@@ -35,7 +35,7 @@ app.register_blueprint(payment_api)
 @app.route("/")
 @app.route("/index")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", session=session)
 
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)

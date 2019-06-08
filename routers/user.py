@@ -5,7 +5,9 @@ from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
 from models.user import User
+from models.payment import Payment
 from database import mongo
+from util import deserialize_json
 
 user_api = Blueprint("user_api", __name__)
 
@@ -29,7 +31,7 @@ def signup():
             return "exist user"
 
         u_uuid = uuid.uuid4()
-        user = User(username, password, u_uuid)
+        user = User(username, password, 0, u_uuid)
         db.insert_one(user.__dict__)
 
         session["username"] = username
@@ -51,9 +53,9 @@ def signin():
         password = request.form["password"]
 
         db: wrappers.Collection = mongo.db.users
-        result: User = db.find_one({ "username": username, "password": password })
+        result: User = deserialize_json(User, db.find_one({ "username": username, "password": password }))
         if result == None:
-            return ""
+            return "<script>alert('user not found'); history.back(-1);</script>"
 
         session["username"] = username
         session["uuid"] = result.uuid

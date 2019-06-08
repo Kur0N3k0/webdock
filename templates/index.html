@@ -1,5 +1,10 @@
 {% extends 'layout.html' %}
 {% block content %}
+                {% if "username" not in session %}
+                <script>
+                    location = "/signin";
+                </script>
+                {% else %}
                 <article>
                     <h2>Image</h2>
                     <div class="image-search">
@@ -28,6 +33,6 @@
                             </tbody>
                         </table>
                     </div>
-                    
                 </article>
+                {% endif %}
 {% endblock %}

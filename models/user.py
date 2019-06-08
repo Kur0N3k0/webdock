@@ -1,13 +1,9 @@
 from models.payment import Payment
+import uuid
 
 class User(object):
-    name = None
-    password = None
-    payment = None
-    uuid = None
-
-    def __init__(self, name: str, password: str, payment: Payment, charge: int, uuid: uuid):
-        self.name = name
+    def __init__(self, username: str, password: str, level: int, _uuid: uuid.UUID):
+        self.username = username
         self.password = password
-        self.payment = payment
-        self.uuid = uuid
+        self.level = level
+        self.uuid = _uuid

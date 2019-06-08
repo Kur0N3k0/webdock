@@ -1,7 +1,7 @@
 * {
     margin: 0;
 }
-
+/*
 a {
     text-decoration: none;
     color: black;
@@ -85,4 +85,15 @@ section.content {
 
 article {
     width: 70%;
+}
+*/
+
+header, main, footer {
+    padding-left: 300px;
+}
+
+@media only screen and (max-width : 992px) {
+    header, main, footer {
+        padding-left: 0;
+    }
 }
