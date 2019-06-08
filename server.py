@@ -7,10 +7,12 @@ from flask_uuid import FlaskUUID
 from werkzeug.utils import secure_filename
 
 from models.user import User
-from models.dockers import Dockers
+from models.image import Image
+from models.container import Container
 from models.dockerfile import Dockerfile
 
 from database import mongo
+from dockerengine import docker
 
 log = logging.Logger("webdock")
 

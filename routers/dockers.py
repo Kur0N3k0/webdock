@@ -4,7 +4,8 @@ from flask import Flask, url_for, request, session, render_template, redirect, B
 from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
-from models.dockers import Dockers
+from models.image import Image
+from models.container import Container
 from models.dockerfile import Dockerfile
 from database import mongo
 
@@ -19,22 +20,41 @@ def docker_list():
         return render_template("fail.html")
     
     uid: uuid.UUID = session.get("uuid")
-    db: wrappers.Collection = mongo.db.docker
-    result: list = db.find({ "uid": uid })
-    if not result:
+    db: wrappers.Collection = mongo.db.images
+    images: list = db.find({ "uid": uid })
+    if not images:
         return render_template("fail.html")
 
-    return render_template("docker/list.html", docker=result)
+    db: wrappers.Collection = mongo.db.containers
+    containers: list = db.find({ "uid": uid })
+    if not containers:
+        return render_template("fail.html")
+
+    return render_template("docker/list.html", images=images, containers=containers)
 
 @docker_api.route("/docker/images")
 def docker_images():
-    return redirect("/docker/list")
+    if login_check() == False:
+        return render_template("fail.html")
+
+    uid: uuid.UUID = session.get("uuid")
+    db: wrappers.Collection = mongo.db.images
+    result: list = db.find({ "uid": uid })
+    if not result:
+        return render_template("fail.html")
+    return render_template("docker/containers.html", containers=result)
 
 @docker_api.route("/docker/containers")
 def docker_containers():
     if login_check() == False:
         return render_template("fail.html")
-        
+
+    uid: uuid.UUID = session.get("uuid")
+    db: wrappers.Collection = mongo.db.containers
+    result: list = db.find({ "uid": uid })
+    if not result:
+        return render_template("fail.html")
+    return render_template("docker/containers.html", containers=result)
 
 @docker_api.route("/docker/<uuid:sid>/status")
 def docker_status(sid: uuid.UUID, methods=["GET"]):
@@ -44,15 +64,15 @@ def docker_status(sid: uuid.UUID, methods=["GET"]):
     if login_check() == False:
         return render_template("fail.html")
     
-    db: wrappers.Collection = mongo.db.docker
-    result: Dockers = db.find_one({ "uuid": sid })
+    db: wrappers.Collection = mongo.db.containers
+    result: Container = db.find_one({ "uuid": sid })
     if result == None:
         return render_template("fail.html")
 
     return result.status
 
-@docker_api.route("/docker/install", methods=["POST"])
-def docker_install(uid: uuid.UUID):
+@docker_api.route("/docker/build", methods=["POST"])
+def docker_build(uid: uuid.UUID):
     """
     GET
     :param uid: user uuid
@@ -74,11 +94,12 @@ def docker_install(uid: uuid.UUID):
     tag = request.form["tag"]
     ver = request.form["ver"]
     dockfile = request.form["dockfile"]
-    vm_uuid = uuid.uuid4()
+    image_uuid = uuid.uuid4()
+    container_uuid = uuid.uuid4()
 
-    docker = Dockers(uid, "", tag, ver, "installing", vm_uuid)
-    db: wrappers.Collection = mongo.db.docker
-    db.insert_one(docker.__dict__)
+    image = Image(uid, "", tag, ver, "installing", image_uuid)
+    db: wrappers.Collection = mongo.db.images
+    db.insert_one(image.__dict__)
 
     # search Dockerfile
     df: wrappers.Collection = mongo.db.dockerfile
@@ -86,42 +107,50 @@ def docker_install(uid: uuid.UUID):
     if result == None:
         render_template("fail.html")
 
-    # docker build
-    docker.status = "build"
-    db.update_one({ "uuid": vm_uuid }, docker)
-    label = docker.build(result.path)
+    # image build
+    image.status = "build"
+    db.update_one({ "uuid": image_uuid }, image.__dict__)
+    short_id = image.build(result.path)
 
-    # docker start
-    docker.status = "start"
-    db.update_one({ "uuid": vm_uuid }, docker)
-    docker.run(label)
+    image.status = "done"
+    db.update_one({ "uuid": image_uuid }, image.__dict__)
+
+    # container start
+    container_info = image.run(short_id)
+    container = Container(uid, tag, ver, "start", image_uuid, container_info.short_id, container_uuid)
+    db: wrappers.Collection = mongo.db.containers
+    db.insert_one(container.__dict__)
 
     return ""
 
-@docker_api.route("/docker/uninstall/<uuid:sid>")
-def docker_uninstall(sid: uuid.UUID, methods=["POST"]):
+@docker_api.route("/docker/rmi/<uuid:sid>")
+def docker_rmi(sid: uuid.UUID, methods=["POST"]):
     """
     :param uid: user uuid
-    :param sid: docker uuid
+    :param sid: image uuid
     """
     if login_check() == False:
         return render_template("fail.html")
 
     uid: uuid.UUID = session.get("uuid")
-    db: wrappers.Collection = mongo.db.docker
-    docker: Dockers = db.find_one({ "uid": uid, "uuid": sid })
-    if docker == None:
+    db: wrappers.Collection = mongo.db.images
+    image: Image = db.find_one({ "uid": uid, "uuid": sid })
+    if image == None:
         return render_template("fail.html")
 
-    st = docker_status(sid)
-    if st != "stop":
-        return render_template("fail.html")
+    ct: wrappers.Collection = mongo.db.containers
+    containers = ct.find({ "image": sid })
+    for item in containers:
+        container: Container = item
+        status = docker_status(container.uuid)
+        if status != "stop":
+            return render_template("fail.html")
 
-    docker.status = "uninstalling"
-    db.update_one({ "uuid": sid }, docker)
+    image.status = "uninstalling"
+    db.update_one({ "uuid": sid }, image.__dict__)
 
-    # delete docker
-    docker.delete()
+    # delete image
+    image.delete()
 
     db.delete_one({ "uuid": sid })
 
@@ -133,21 +162,25 @@ def docker_start(sid: uuid.UUID, methods=["GET"]):
         return render_template("fail.html")
     
     uid: uuid.UUID = session.get("uuid")
-    db: wrappers.Collection = mongo.db.docker
-    docker: Dockers = db.find_one({ "uid": uid, "uuid": sid })
-    if docker == None:
+    db: wrappers.Collection = mongo.db.containers
+    container: Container = db.find_one({ "uid": uid, "uuid": sid })
+    if container == None:
         return render_template("fail.html")
     
-    docker.status = "run"
-    db.update_one({ "uid": uid, "uuid": sid }, docker)
+    container.status = "run"
+    db.update_one({ "uid": uid, "uuid": sid }, container.__dict__)
 
-    # docker start & check
-    docker.start()
+    # container start & check
+    try:
+        container.start()
 
-    docker.status = "start"
-    db.update_one({ "uid": uid, "uuid": sid }, docker)
-
-    return "start"
+        container.status = "start"
+        db.update_one({ "uid": uid, "uuid": sid }, container.__dict__)
+        return "start"
+    except:
+        container.status = "failed"
+        db.update_one({ "uid": uid, "uuid": sid }, container.__dict__)
+        return "failed"
 
 @docker_api.route("/docker/stop/<uuid:sid>")
 def docker_stop(sid: uuid.UUID, methods=["GET"]):
@@ -156,19 +189,23 @@ def docker_stop(sid: uuid.UUID, methods=["GET"]):
     
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.docker
-    docker: Dockers = db.find_one({ "uid": uid, "uuid": sid })
-    if docker == None:
+    container: Container = db.find_one({ "uid": uid, "uuid": sid })
+    if container == None:
         return render_template("fail.html")
     
-    docker.status = "stopping"
-    db.update_one({ "uid": uid, "uuid": sid }, docker)
+    container.status = "stopping"
+    db.update_one({ "uid": uid, "uuid": sid }, container)
 
-    # docker stop & check
-    docker.stop()
-    while not docker.is_stopped():
-        continue
+    # container stop & check
+    try:
+        container.stop()
 
-    docker.status = "stop"
-    db.update_one({ "uid": uid, "uuid": sid }, docker)
+        container.status = "stop"
+        db.update_one({ "uid": uid, "uuid": sid }, container)
+        return "stop"
+    except:
+        container.status = "failed"
+        db.update_one({ "uid": uid, "uuid": sid }, container)
+        return "failed"
 
     return "stop"
