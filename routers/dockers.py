@@ -12,8 +12,6 @@ from util import deserialize_json, login_required
 
 docker_api = Blueprint("docker_api", __name__)
 
-login_check = lambda: session.get("username") != None
-
 @docker_api.route("/docker")
 @docker_api.route("/docker/list")
 @login_required

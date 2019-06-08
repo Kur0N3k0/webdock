@@ -54,6 +54,7 @@ def signin():
 
         session["username"] = username
         session["uuid"] = result.uuid
+        session["level"] = result.level
 
     return redirect("/docker")
 

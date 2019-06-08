@@ -1,11 +1,9 @@
 from flask_uuid import FlaskUUID
+import uuid
 
 class Dockerfile(object):
-    uid = ""
-    path = ""
-    uuid = ""
-
-    def __init__(self, uid: uuid, path: str, uuid: uuid):
+    def __init__(self, uid: uuid, path: str, date: int, _uuid: uuid.UUID):
         self.uid = uid
         self.path = path
-        self.uuid = uuid
+        self.date = date
+        self.uuid = _uuid
