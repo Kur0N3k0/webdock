@@ -1,4 +1,14 @@
+from functools import wraps
+from flask import session, redirect
 from flask_pymongo import pymongo
+
+def login_required(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if session.get("username") == None:
+            return redirect("/signin")
+        return func(*args, **kwargs)
+    return deco
 
 def deserialize_json(cls=None, data=None):
     if data == None:

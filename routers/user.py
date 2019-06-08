@@ -7,17 +7,12 @@ from flask_uuid import FlaskUUID
 from models.user import User
 from models.payment import Payment
 from database import mongo
-from util import deserialize_json
+from util import deserialize_json, login_required
 
 user_api = Blueprint("user_api", __name__)
 
-login_check = lambda: session.get("username") != None
-
 @user_api.route("/signup", methods=["GET", "POST"])
 def signup():
-    if login_check() == True:
-        return render_template("fail.html")
-
     if request.method == "GET":
         return render_template("user/signup.html")
 

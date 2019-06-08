@@ -8,7 +8,7 @@ from models.image import Image
 from models.container import Container
 from models.dockerfile import Dockerfile
 from database import mongo
-from util import deserialize_json
+from util import deserialize_json, login_required
 
 docker_api = Blueprint("docker_api", __name__)
 
@@ -16,10 +16,8 @@ login_check = lambda: session.get("username") != None
 
 @docker_api.route("/docker")
 @docker_api.route("/docker/list")
+@login_required
 def docker_list():
-    if login_check() == False:
-        return redirect("/signin")
-    
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.images
     images: list = deserialize_json(Image, db.find({ "uid": uid }))
@@ -30,45 +28,38 @@ def docker_list():
     return render_template("docker/list.html", images=images, containers=containers)
 
 @docker_api.route("/docker/images")
+@login_required
 def docker_images():
-    if login_check() == False:
-        return redirect("/signin")
-
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.images
     result: list = deserialize_json(Image, db.find({ "uid": uid }))
-    if not result:
-        return render_template("fail.html")
+
     return render_template("docker/images.html", containers=result)
 
 @docker_api.route("/docker/containers")
+@login_required
 def docker_containers():
-    if login_check() == False:
-        return redirect("/signin")
-
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     result: list = deserialize_json(Container, db.find({ "uid": uid }))
-    if not result:
-        return render_template("fail.html")
+    
     return render_template("docker/containers.html", containers=result)
 
 @docker_api.route("/docker/<uuid:sid>/status")
+@login_required
 def docker_status(sid: uuid.UUID, methods=["GET"]):
     """
     :param sid: docker uuid
     """
-    if login_check() == False:
-        return redirect("/signin")
-    
     db: wrappers.Collection = mongo.db.containers
     result: Container = deserialize_json(Container, db.find_one({ "uuid": sid }))
     if result == None:
-        return render_template("fail.html")
+        return "failed"
 
     return result.status
 
 @docker_api.route("/docker/build", methods=["POST"])
+@login_required
 def docker_build(uid: uuid.UUID):
     """
     GET
@@ -81,11 +72,8 @@ def docker_build(uid: uuid.UUID):
 
     build Dockerfile
     """
-    if login_check() == False:
-        return redirect("/signin")
-
     if request.method != "POST":
-        return ""
+        return "failed"
     
     uid: uuid.UUID = session.get("uuid")
     tag = request.form["tag"]
@@ -102,7 +90,7 @@ def docker_build(uid: uuid.UUID):
     df: wrappers.Collection = mongo.db.dockerfile
     result: Dockerfile = deserialize_json(Dockerfile, df.find_one({ "uuid": dockfile }))
     if result == None:
-        render_template("fail.html")
+        return "failed"
 
     # image build
     image.status = "build"
@@ -121,19 +109,17 @@ def docker_build(uid: uuid.UUID):
     return ""
 
 @docker_api.route("/docker/rmi/<uuid:sid>")
+@login_required
 def docker_rmi(sid: uuid.UUID, methods=["POST"]):
     """
     :param uid: user uuid
     :param sid: image uuid
     """
-    if login_check() == False:
-        return redirect("/signin")
-
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": uid, "uuid": sid }))
     if image == None:
-        return "fail"
+        return "failed"
 
     ct: wrappers.Collection = mongo.db.containers
     containers: list = deserialize_json(Container, ct.find({ "image": sid }))
@@ -141,7 +127,7 @@ def docker_rmi(sid: uuid.UUID, methods=["POST"]):
         container: Container = item
         status = docker_status(container.uuid)
         if status != "stop":
-            return "fail"
+            return "failed"
 
     image.status = "uninstalling"
     db.update_one({ "uuid": sid }, image.__dict__)
@@ -154,15 +140,13 @@ def docker_rmi(sid: uuid.UUID, methods=["POST"]):
     return "success"
 
 @docker_api.route("/docker/start/<uuid:sid>")
+@login_required
 def docker_start(sid: uuid.UUID, methods=["GET"]):
-    if login_check() == False:
-        return render_template("fail.html")
-    
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": uid, "uuid": sid }))
     if container == None:
-        return render_template("fail.html")
+        return "failed"
     
     container.status = "run"
     db.update_one({ "uid": uid, "uuid": sid }, container.__dict__)
@@ -180,10 +164,8 @@ def docker_start(sid: uuid.UUID, methods=["GET"]):
         return "failed"
 
 @docker_api.route("/docker/stop/<uuid:sid>")
+@login_required
 def docker_stop(sid: uuid.UUID, methods=["GET"]):
-    if login_check() == False:
-        return render_template("fail.html")
-    
     uid: uuid.UUID = session.get("uuid")
     db: wrappers.Collection = mongo.db.docker
     container: Container = deserialize_json(Container, db.find_one({ "uid": uid, "uuid": sid }))
