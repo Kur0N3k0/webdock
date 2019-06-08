@@ -5,7 +5,45 @@
         <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     </head>
     <body>
-        {% block content %}
-        {% endblock %}
+        <header>
+            <div class="header">
+                <h1>
+                    <a href="/" class="link-logo">
+                        <img src="https://manage.conoha.jp/Content/Images/ConoHa/Common/logo.png" alt="logo">
+                    </a>
+                </h1>
+                <ul class="header-menu">
+                    <li>
+                        <a href="#">
+                            <span>VPS</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </header>
+        <div class="container">
+            <aside>
+                <nav>
+                    <ul>
+                        <li class="menu">
+                            <a href="#">Image</a>
+                        </li>
+                        <li class="menu">
+                            <a href="#">Container</a>
+                        </li>
+                        <li class="menu">
+                            <a href="#">Dockerfile</a>
+                        </li>
+                        <li class="menu">
+                            <a href="#">Payment</a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+            <section class="content">
+                {% block content %}
+                {% endblock %}
+            </section>
+        </div>
     </body>
 </html>

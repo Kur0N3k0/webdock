@@ -1,0 +1,88 @@
+* {
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul .menu a {
+    display: block;
+    text-align: left;
+    border-bottom: none;
+    border-right: none;
+    height: auto;
+    position: relative;
+    color: #12b8d7;
+    padding: 11px 0 11px 42px;
+    text-decoration: none;
+    font-size: 16px;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.header {
+    position: relative;
+    min-width: 1024px;
+    overflow: hidden;
+}
+
+.header > h1 {
+    margin: 0;
+    padding: 15px 0 15px 24px;
+}
+
+.header .header-menu {
+    font-size: 0;
+    height: 100%;
+    left: 190px;
+    position: absolute;
+    top: 0;
+}
+
+.header .header-menu li {
+    display: inline-block;
+    height: 100%;
+    text-align: center;
+    width: 120px;
+    border-bottom: 1px solid #dadada;
+}
+
+.header .header-menu li a {
+    background-color: #fff;
+    border-bottom: 5px #fff solid;
+    color: #586062;
+    display: block;
+    height: 100%;
+    padding: 12px 0 0;
+    text-decoration: none;
+    width: 100%;
+}
+
+.header .header-menu li a span {
+    display: block;
+    font-size: 12px;
+    margin-top: 6px;
+    width: 100%;
+}
+
+aside nav {
+    width: 170px;
+    position: fixed;
+}
+
+section.content {
+    margin-left: 200px;
+}
+
+article {
+    width: 70%;
+}
