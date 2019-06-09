@@ -17,8 +17,8 @@
                                 <tr>
                                     <td class="center-align">tag</td>
                                     <td class="center-align">uuid</td>
-                                    <td class="center-align">stats</td>
-                                    <td class="center-align">run</td>
+                                    <td class="center-align">status</td>
+                                    <td class="center-align">start/stop</td>
                                     <td class="center-align">remove</td>
                                 </tr>
                             </thead>
@@ -29,47 +29,14 @@
                                     <td class="center-align">{{ container.uuid }}</td>
                                     <td class="center-align">{{ container.status }}</td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ container.uuid }}">Start</a>
+                                        {% if container.status != "start" %}
+                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-uuid="{{ container.uuid }}">Start</a>
+                                        {% else %}
+                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-uuid="{{ container.uuid }}">Stop</a>
+                                        {% endif %}
                                     </td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ container.uuid }}">Stop</a>
-                                    </td>
-                                </tr>
-                                <tr class="hide" id="{{ container.uuid }}">
-                                    <td colspan="5">
-                                        <div class="container">
-                                            <div class="input-field">
-                                                <input type="text" id="tag" value="cat:latest">
-                                                <label for="tag">tag</label>
-                                            </div>
-                                            <div class="input-field">
-                                                <input type="text" id="dockfile" value="{{ container.uuid }}" disabled>
-                                                <label for="dockfile">Dockerfile</label>
-                                            </div>
-                                            <div class="input-field">
-                                                <input type="text" id="root-pass">
-                                                <label for="root-pass">root password</label>
-                                            </div>
-                                            <div class="input-field">
-                                                <input type="text" id="ssh-port">
-                                                <label for="ssh-port">ssh port</label>
-                                            </div>
-                                            <div class="input-field center-align">
-                                                <a class="waves-effect waves-light btn" onclick="build_start('{{ container.uuid }}')">Build start</a>
-                                            </div>
-                                            <div class="input-field center-align">
-                                                <div class="row">
-                                                    <form class="col s12">
-                                                        <div class="row">
-                                                            <div class="input-field col s12">
-                                                                <textarea id="build-result" class="materialize-textarea"></textarea>
-                                                                <label for="build-result">Result</label>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ container.uuid }}">Remove</a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -87,6 +54,49 @@
                     </form>
                 </div>
                 <script>
+                    function start(m) {
+                        const uuid = $(m).attr("data-uuid");
+                        $.get(
+                            "/docker/start/" + uuid
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                            }
+                        });
+                    }
+
+                    function stop(m) {
+                        const uuid = $(m).attr("data-uuid");
+                        $.get(
+                            "/docker/stop/" + uuid
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            console.log(json);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                            }
+                        });
+                    }
+
+                    function remove(m) {
+                        const uuid = $(m).attr("data-uuid");
+                        $.get(
+                            "/docker/rm/" + uuid
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                            }
+                        });
+                    }
+
                     function build(m) {
                         const uuid = $(m).attr("data-uuid");
                         if($("#" + uuid).hasClass("hide")) {
@@ -96,59 +106,15 @@
                         }
                     }
 
-                    function build_start(uuid) {
-                        $.post("/docker/build", {
-                            tag: $("#" + uuid + " #tag").val(),
-                            dockfile: $("#" + uuid + " #dockfile").val(),
-                            rootpass: $("#" + uuid + " #root-pass").val(),
-                            sshport: $("#" + uuid + " #ssh-port").val()
-                        }).done((res) => {
-                            const result = JSON.parse(res);
-                            msg = "";
-                            for(item in result){
-                                for(key in result[item]) {
-                                    if(result[item][key] instanceof Object)
-                                        continue;
-                                    msg += result[item][key];
-                                }
-                            }
-                            $("#" + uuid + " #build-result").val(msg);
-                        });
-                    }
-
                     $(function(){
-                        $("#dockerfile-search").click(() => {
+                        $("#container-search").click(() => {
                             const search = $("#search").text();
-                            $.post("/dockerfile/search",{
-                                name: search
+                            $.post("/docker/containers/search",{
+                                tag: search
                             }).done((res) => {
 
                             });
                         });
-                        $("#dockerfile-upload").click((e) => {
-                            e.preventDefault();
-                            $("#file").click();
-                        });
-
-                        $("#file").change(() => {
-                            const form = $("#form-file")[0];
-                            formData = new FormData(form);
-                            formData.append("file", $("#file")[0].files[0]);
-
-                            $.ajax({
-                                url: "/dockerfile/upload",
-                                contentType: false,
-                                processData: false,
-                                data: formData,
-                                type: "POST",
-                                success: function(result) {
-                                    console.log(result);
-                                    location.reload();
-                                }
-                            });
-                        });
-
-                        M.textareaAutoResize($('#build-result'));
                     });
                 </script>
 {% endblock %}

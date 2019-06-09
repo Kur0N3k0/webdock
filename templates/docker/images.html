@@ -29,10 +29,10 @@
                                     <td class="center-align">{{ image.uuid }}</td>
                                     <td class="center-align">{{ image.status }}</td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ image.uuid }}">Run</a>
+                                        <a class="waves-effect waves-light btn" onclick="run(this)" data-uuid="{{ image.uuid }}">Run</a>
                                     </td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ image.uuid }}">Remove</a>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ image.uuid }}">Remove</a>
                                     </td>
                                 </tr>
                                 <tr class="hide" id="{{ image.uuid }}">
@@ -43,19 +43,11 @@
                                                 <label for="tag">tag</label>
                                             </div>
                                             <div class="input-field">
-                                                <input type="text" id="dockfile" value="{{ image.uuid }}" disabled>
-                                                <label for="dockfile">Dockerfile</label>
-                                            </div>
-                                            <div class="input-field">
-                                                <input type="text" id="root-pass">
-                                                <label for="root-pass">root password</label>
-                                            </div>
-                                            <div class="input-field">
                                                 <input type="text" id="ssh-port">
                                                 <label for="ssh-port">ssh port</label>
                                             </div>
                                             <div class="input-field center-align">
-                                                <a class="waves-effect waves-light btn" onclick="build_start('{{ image.uuid }}')">Build start</a>
+                                                <a class="waves-effect waves-light btn" onclick="run_start('{{ image.uuid }}')">Start</a>
                                             </div>
                                             <div class="input-field center-align">
                                                 <div class="row">
@@ -76,18 +68,9 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="row">
-                        <div class="col s10"></div>
-                        <div class="col s2 center-align">
-                            <a class="waves-effect waves-light btn" id="dockerfile-upload">Upload</a>
-                        </div>
-                    </div>
-                    <form class="hide" method="POST" action="/dockerfile/upload" id="form-file" enctype="multipart/form-data">
-                        <input type="file" name="file" id="file">
-                    </form>
                 </div>
                 <script>
-                    function build(m) {
+                    function run(m) {
                         const uuid = $(m).attr("data-uuid");
                         if($("#" + uuid).hasClass("hide")) {
                             $("#" + uuid).removeClass("hide");
@@ -96,11 +79,9 @@
                         }
                     }
 
-                    function build_start(uuid) {
-                        $.post("/docker/build", {
+                    function run_start(uuid) {
+                        $.post("/docker/run/" + uuid, {
                             tag: $("#" + uuid + " #tag").val(),
-                            dockfile: $("#" + uuid + " #dockfile").val(),
-                            rootpass: $("#" + uuid + " #root-pass").val(),
                             sshport: $("#" + uuid + " #ssh-port").val()
                         }).done((res) => {
                             const result = JSON.parse(res);
@@ -117,38 +98,14 @@
                     }
 
                     $(function(){
-                        $("#dockerfile-search").click(() => {
+                        $("#image-search").click(() => {
                             const search = $("#search").text();
-                            $.post("/dockerfile/search",{
-                                name: search
+                            $.post("/docker/images/search",{
+                                tag: search
                             }).done((res) => {
 
                             });
                         });
-                        $("#dockerfile-upload").click((e) => {
-                            e.preventDefault();
-                            $("#file").click();
-                        });
-
-                        $("#file").change(() => {
-                            const form = $("#form-file")[0];
-                            formData = new FormData(form);
-                            formData.append("file", $("#file")[0].files[0]);
-
-                            $.ajax({
-                                url: "/dockerfile/upload",
-                                contentType: false,
-                                processData: false,
-                                data: formData,
-                                type: "POST",
-                                success: function(result) {
-                                    console.log(result);
-                                    location.reload();
-                                }
-                            });
-                        });
-
-                        M.textareaAutoResize($('#build-result'));
                     });
                 </script>
 {% endblock %}

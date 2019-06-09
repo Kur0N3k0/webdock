@@ -1,32 +1,59 @@
 {% extends 'layout.html' %}
 {% block content %}
                 <div class="container">
-                    <h2>Image</h2>
-                    <div class="image-search">
-                        <input type="text" id="search">
-                        <input type="button" value="Search">
-                    </div>
-                    <div class="image-list">
-                        <table border="1" width="100%">
+                    <h2>Images</h2>
+                    <div class="row">
+                        <table border="1">
                             <thead>
                                 <tr>
-                                    <td>repository</td>
-                                    <td>tag</td>
-                                    <td>image id</td>
-                                    <td>created</td>
-                                    <td>size</td>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">status</td>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><!-- link -->
-                                    <td>pwn</td>
-                                    <td>lastest</td>
-                                    <td>8a162a24006c</td>
-                                    <td>5 months ago</td>
-                                    <td>2.1GB</td>
+                                {% for image in images %}
+                                <tr>
+                                    <td class="center-align">{{ image.tag }}</td>
+                                    <td class="center-align">{{ image.uuid }}</td>
+                                    <td class="center-align">{{ image.status }}</td>
                                 </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </article>
+                    <h2>Containers</h2>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">status</td>
+                                    <td class="center-align">start/stop</td>
+                                    <td class="center-align">remove</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for container in containers %}
+                                <tr>
+                                    <td class="center-align">{{ container.tag }}</td>
+                                    <td class="center-align">{{ container.uuid }}</td>
+                                    <td class="center-align">{{ container.status }}</td>
+                                    <td class="center-align">
+                                        {% if container.status != "start" %}
+                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-uuid="{{ container.uuid }}">Start</a>
+                                        {% else %}
+                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-uuid="{{ container.uuid }}">Stop</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ container.uuid }}">Remove</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 {% endblock %}

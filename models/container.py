@@ -18,13 +18,11 @@ class Container(object):
         return True
     
     def stop(self, container_id):
-        container: docker.models.containers.Container = client.containers.get(container_id)
-        container.stop()
+        client.stop(container=container_id)
         return True
 
-    def delete(self, container_id):
-        container: docker.models.containers.Container = client.containers.get(container_id)
-        container.remove()
+    def remove(self, container_id):
+        client.remove_container(container=container_id)
         return True
     
     def is_stopped(self, container_id):

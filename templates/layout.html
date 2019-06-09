@@ -2,7 +2,8 @@
 <html>
     <head>
         <!-- Compiled and minified CSS -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inconsolata&display=swap" />
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/app.css') }}" />
 
         <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
@@ -14,10 +15,12 @@
         <header>
             <nav>
                 <div class="nav-wrapper white">
-                    <a href="/" class="brand-logo" style="padding: 5px;">
-                        <!--https://manage.conoha.jp/Content/Images/ConoHa/Common/logo.png-->
-                        <img src="#" alt="logo">
-                    </a>
+                    <a href="#" class="brand-logo black-text" style="padding-left: 10px;">Logo</a>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                        <li><a href="sass.html" class="black-text">Sass</a></li>
+                        <li><a href="badges.html" class="black-text">Components</a></li>
+                        <li><a href="collapsible.html" class="black-text">JavaScript</a></li>
+                    </ul>
                 </div>
             </nav>
         </header>

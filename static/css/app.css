@@ -1,5 +1,6 @@
 * {
     margin: 0;
+    font-family: Inconsolate;
 }
 /*
 a {
@@ -90,6 +91,10 @@ article {
 
 header, main, footer {
     padding-left: 300px;
+}
+
+thead td {
+    font-weight: bold;
 }
 
 @media only screen and (max-width : 992px) {
