@@ -30,16 +30,21 @@ def dockerfile():
 def dockerfile_upload():
     uid = session.get("uuid")
     fn_uuid = uuid.uuid4()
-    path = "upload/" + str(fn_uuid)
+
+    path = "upload/" + uid
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    path = "{}/".format(path) + str(fn_uuid)
     if not os.path.exists(path):
         os.mkdir(path)
 
     f = request.files["file"]
-    fn = "upload/" + str(fn_uuid) + "/Dockerfile"
+    fn = path + "/" + secure_filename(f.filename)
     f.save(fn)
 
     db: wrappers.Collection = mongo.db.dockerfile
-    db.insert_one(Dockerfile(uid, fn, time.time(), str(fn_uuid)).__dict__)
+    db.insert_one(Dockerfile(uid, secure_filename(f.filename), fn, time.time(), str(fn_uuid)).__dict__)
     
     return ""
 
@@ -73,6 +78,6 @@ def dockerfile_search():
     uid = session.get("uuid")
     name = request.form["name"]
     db: wrappers.Collection = mongo.db.dockerfile
-    dockerfiles: list = deserialize_json(Dockerfile, db.find({ "uid": uid, "name": name }))
+    dockerfiles: list = deserialize_json(Dockerfile, db.find({ "uid": uid, "name": { "$regex": name } }))
 
-    return json.dumps(dockerfiles)
+    return json.dumps(list(map(lambda x: x.__dict__, dockerfiles)))

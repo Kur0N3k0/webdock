@@ -1,4 +1,4 @@
-import uuid
+import uuid, json
 
 from flask import Flask, url_for, request, session, render_template, redirect, Blueprint
 from flask_pymongo import PyMongo, wrappers
@@ -8,7 +8,7 @@ from models.image import Image
 from models.container import Container
 from models.dockerfile import Dockerfile
 from database import mongo
-from util import deserialize_json, login_required
+from util import deserialize_json, login_required, randomString, error
 
 docker_api = Blueprint("docker_api", __name__)
 
@@ -32,7 +32,7 @@ def docker_images():
     db: wrappers.Collection = mongo.db.images
     result: list = deserialize_json(Image, db.find({ "uid": uid }))
 
-    return render_template("docker/images.html", containers=result)
+    return render_template("docker/images.html", images=result)
 
 @docker_api.route("/docker/containers")
 @login_required
@@ -58,29 +58,40 @@ def docker_status(sid: uuid.UUID, methods=["GET"]):
 
 @docker_api.route("/docker/build", methods=["POST"])
 @login_required
-def docker_build(uid: uuid.UUID):
+def docker_build():
     """
     GET
     :param uid: user uuid
 
     POST
     :param tag: docker tag
-    :param ver: container version
     :parma dockfile: dockerfile uuid
+    :param rootpass: root password for ssh
+    :param sshport: ssh port forwarding
 
     build Dockerfile
     """
     if request.method != "POST":
         return "failed"
     
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     tag = request.form["tag"]
-    ver = request.form["ver"]
     dockfile = request.form["dockfile"]
-    image_uuid = uuid.uuid4()
+    rootpass = request.form["rootpass"]
+    sshport = int(request.form["sshport"])
+
+    fn = "upload/{}/{}/Dockerfile".format(uid, dockfile)
+    with open(fn, "r") as f:
+        df = f.read()
+
+    name = tag.split(":")[0]
+    ver = tag.split(":")[1]
+    tag = randomString(20 - len(name)) + name + ":" + ver
+    
+    image_uuid = str(uuid.uuid4())
     container_uuid = uuid.uuid4()
 
-    image = Image(uid, "", tag, ver, "installing", image_uuid)
+    image = Image(uid, "", tag, "installing", image_uuid)
     db: wrappers.Collection = mongo.db.images
     db.insert_one(image.__dict__)
 
@@ -90,21 +101,27 @@ def docker_build(uid: uuid.UUID):
     if result == None:
         return "failed"
 
-    # image build
+    #try:
+        # image build
     image.status = "build"
-    db.update_one({ "uuid": image_uuid }, image.__dict__)
-    short_id = image.build(result.path)
+    db.update({ "uuid": image_uuid }, image.__dict__)
+    result, imgs = image.build(result.path, rootpass)
 
     image.status = "done"
-    db.update_one({ "uuid": image_uuid }, image.__dict__)
+    db.update({ "uuid": image_uuid }, image.__dict__)
+    #except:
+    #    image.status = "done"
+    #    db.update({ "uuid": image_uuid }, image.__dict__)
+    #    return error("Dockerfile::Image::build fail")
 
     # container start
-    container_info = image.run(short_id)
-    container = Container(uid, tag, ver, "start", image_uuid, container_info.short_id, container_uuid)
+    container_id = image.run(tag, port=sshport)
+    container = Container(uid, tag, "start", image_uuid, container_id, container_uuid)
+    container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
 
-    return ""
+    return json.dumps(result)
 
 @docker_api.route("/docker/rmi/<uuid:sid>")
 @login_required
