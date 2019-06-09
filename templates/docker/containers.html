@@ -8,7 +8,7 @@
                             <label for="search">Search</label>
                         </div>
                         <div class="col s2 input-field center-align">
-                            <a class="waves-effect waves-light btn" id="dockerfile-search">Search</a>
+                            <a class="waves-effect waves-light btn" id="container-search">Search</a>
                         </div>
                     </div>
                     <div class="row">
@@ -27,7 +27,7 @@
                                 <tr>
                                     <td class="center-align">{{ container.tag }}</td>
                                     <td class="center-align">{{ container.uuid }}</td>
-                                    <td class="center-align">{{ container.status }}</td>
+                                    <td class="center-align" id="status_{{ container.uuid }}">{{ container.status }}</td>
                                     <td class="center-align">
                                         {% if container.status != "start" %}
                                         <a class="waves-effect waves-light btn" onclick="start(this)" data-uuid="{{ container.uuid }}">Start</a>
@@ -54,45 +54,70 @@
                     </form>
                 </div>
                 <script>
+                    const html = `
+<div class="preloader-wrapper small active">
+    <div class="spinner-layer spinner-blue-only">
+        <div class="circle-clipper left">
+            <div class="circle"></div>
+        </div>
+        <div class="gap-patch">
+            <div class="circle"></div>
+        </div>
+        <div class="circle-clipper right">
+            <div class="circle"></div>
+        </div>
+    </div>
+</div>`;
                     function start(m) {
                         const uuid = $(m).attr("data-uuid");
+                        $("#status_" + uuid).html(html);
                         $.get(
                             "/docker/start/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res);
+                            const json = JSON.parse(res)[0];
                             if(json["code"] != 0) {
                                 // error
                             } else {
                                 // success
+                                $("#status_" + uuid).html("start");
+                                $(m).text("stop");
+                                $(m).attr("onclick", "stop(this)");
                             }
                         });
                     }
 
                     function stop(m) {
                         const uuid = $(m).attr("data-uuid");
+                        $("#status_" + uuid).html(html);
                         $.get(
                             "/docker/stop/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res);
-                            console.log(json);
+                            const json = JSON.parse(res)[0];
                             if(json["code"] != 0) {
                                 // error
                             } else {
                                 // success
+                                $("#status_" + uuid).html("stop");
+                                $(m).text("start");
+                                $(m).attr("onclick", "start(this)");
                             }
                         });
                     }
 
                     function remove(m) {
                         const uuid = $(m).attr("data-uuid");
+                        $("#status_" + uuid).html(html);
                         $.get(
                             "/docker/rm/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res);
+                            const json = JSON.parse(res)[0];
                             if(json["code"] != 0) {
                                 // error
                             } else {
                                 // success
+                                $("#status_" + uuid).html("removed");
+                                $(m).text("removed");
+                                $(m).attr("disabled", true);
                             }
                         });
                     }
@@ -108,11 +133,11 @@
 
                     $(function(){
                         $("#container-search").click(() => {
-                            const search = $("#search").text();
+                            const search = $("#search").val();
                             $.post("/docker/containers/search",{
                                 tag: search
                             }).done((res) => {
-
+                                console.log(res);
                             });
                         });
                     });

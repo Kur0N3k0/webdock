@@ -114,7 +114,7 @@
 
                     $(function(){
                         $("#dockerfile-search").click(() => {
-                            const search = $("#search").text();
+                            const search = $("#search").val();
                             $.post("/dockerfile/search",{
                                 name: search
                             }).done((res) => {

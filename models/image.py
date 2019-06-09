@@ -16,6 +16,8 @@ class Image(object):
     def build(self, path, rootpass):
         df = open(path, "r").read()
         df += """
+RUN apt-get -y install openssh-server
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 RUN echo "root:{}" | chpasswd
 CMD echo 0 > /proc/sys/kernel/yama/ptrace_scope
 CMD /etc/init.d/ssh start && /bin/bash -c "while true; do echo 'still alive'; sleep 600; done"

@@ -38,27 +38,34 @@ def docker_images():
 @login_required
 def docker_images_search():
     tag = request.form["tag"]
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.images
     result: list = deserialize_json(Image, db.find({ "uid": uid, "tag": { "$regex": tag } }))
-    return json_result(0, result)
+    r = []
+    for image in result:
+        r += [ image.__dict__ ]
+    return json_result(0, r)
 
 @docker_api.route("/docker/containers", methods=["GET"])
 @login_required
 def docker_containers():
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     result: list = deserialize_json(Container, db.find({ "uid": uid }))
-    
+
     return render_template("docker/containers.html", containers=result)
 
 @docker_api.route("/docker/containers/search", methods=["POST"])
 @login_required
 def docker_containers_search():
     tag = request.form["tag"]
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     result: list = deserialize_json(Container, db.find({ "uid": uid, "tag": { "$regex": tag } }))
+    r = []
+    for container in result:
+        r += [ container.__dict__ ]
+
     return json_result(0, result)
 
 @docker_api.route("/docker/<uuid:sid>/status")
