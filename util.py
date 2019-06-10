@@ -29,7 +29,7 @@ def error(msg):
     return json.dumps([{"errorDetail": msg}])
 
 def json_result(code, msg):
-    return json.dumps([{"code": code, "msg": msg}])
+    return json.dumps({"code": code, "msg": msg})
 
 def deserialize_json(cls=None, data=None):
     if data == None:

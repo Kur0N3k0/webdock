@@ -15,3 +15,6 @@ class Payment(object):
     def deposit(self, amount):
         pass
     
+    def history(self):
+        pass
+    
