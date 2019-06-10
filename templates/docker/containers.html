@@ -65,7 +65,7 @@
                         $.get(
                             "/docker/start/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res)[0];
+                           const json = JSON.parse(res);
                             if(json["code"] != 0) {
                                 // error
                             } else {
@@ -83,7 +83,7 @@
                         $.get(
                             "/docker/stop/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res)[0];
+                            const json = JSON.parse(res);
                             if(json["code"] != 0) {
                                 // error
                             } else {
@@ -101,7 +101,7 @@
                         $.get(
                             "/docker/rm/" + uuid
                         ).done((res) => {
-                            const json = JSON.parse(res)[0];
+                            const json = JSON.parse(res);
                             if(json["code"] != 0) {
                                 // error
                             } else {

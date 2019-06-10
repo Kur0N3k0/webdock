@@ -99,7 +99,8 @@
                             rootpass: $("#" + uuid + " #root-pass").val(),
                             sshport: $("#" + uuid + " #ssh-port").val()
                         }).done((res) => {
-                            const result = JSON.parse(res);
+                            const result = JSON.parse(res)["msg"];
+                            console.log(result);
                             msg = "";
                             for(item in result){
                                 for(key in result[item]) {

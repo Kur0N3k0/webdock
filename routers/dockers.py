@@ -200,7 +200,7 @@ def docker_rmi(sid: uuid.UUID):
     db.update({ "uuid": sid }, image.__dict__)
 
     # delete image
-    image.delete()
+    image.delete(image.tag)
 
     db.delete_one({ "uuid": sid })
 

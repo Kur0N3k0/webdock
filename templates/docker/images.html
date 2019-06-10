@@ -70,17 +70,7 @@
                     </div>
                 </div>
                 <script>
-                    function run(m) {
-                        const uuid = $(m).attr("data-uuid");
-                        if($("#" + uuid).hasClass("hide")) {
-                            $("#" + uuid).removeClass("hide");
-                        } else {
-                            $("#" + uuid).addClass("hide");
-                        }
-                    }
-
-                    function run_start(uuid) {
-                        const html = `
+                    const html = `
 <div class="preloader-wrapper small active">
     <div class="spinner-layer spinner-blue-only">
         <div class="circle-clipper left">
@@ -94,6 +84,17 @@
         </div>
     </div>
 </div>`;
+
+                    function run(m) {
+                        const uuid = $(m).attr("data-uuid");
+                        if($("#" + uuid).hasClass("hide")) {
+                            $("#" + uuid).removeClass("hide");
+                        } else {
+                            $("#" + uuid).addClass("hide");
+                        }
+                    }
+
+                    function run_start(uuid) {
                         $("#status_" + uuid).html(html);
                         $.post("/docker/run/" + uuid, {
                             tag: $("#" + uuid + " #tag").val(),
@@ -110,6 +111,24 @@
                             }
                             $("#" + uuid + " #build-result").val(msg);
                             $("#status_" + uuid).html("done");
+                        });
+                    }
+
+                    function remove(m) {
+                        const uuid = $(m).attr("data-uuid");
+                        $("#status_" + uuid).html(html);
+                        $.get(
+                            "/docker/rmi/" + uuid
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                                $("#status_" + uuid).html("removed");
+                                $(m).text("removed");
+                                $(m).attr("disabled", true);
+                            }
                         });
                     }
 

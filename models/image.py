@@ -23,8 +23,10 @@ CMD echo 0 > /proc/sys/kernel/yama/ptrace_scope
 CMD /etc/init.d/ssh start && /bin/bash -c "while true; do echo 'still alive'; sleep 600; done"
 """.format(rootpass)
         f = io.BytesIO(df.encode())
-        result = [ json.loads(line) for line in client.build(fileobj=f, tag=self.tag) ]
+        build_result = client.build(fileobj=f, tag=self.tag, rm=True)
+        result = [ json.loads(line) for line in build_result ]
         imgs = client.images(name=self.tag.split(":")[0])
+
         return result, imgs
 
     def run(self, image_tag, command=None, port=9505):
