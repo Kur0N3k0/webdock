@@ -6,3 +6,9 @@ Idea
 - Image commit & export
 - View container information
 - User folder management class implement
+- Image statistics
+ webdock admin server
+        |   |
+===================== <- report image information
+|   |   |   |   |   |
+c   c   c   c   c   c <- webdock client service
