@@ -1,4 +1,6 @@
-class Filesystem(object):
+from classes.api.api import API
+
+class FilesystemAPI(API):
     def __init__(self):
         pass
 

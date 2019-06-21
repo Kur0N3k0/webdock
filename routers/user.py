@@ -5,7 +5,6 @@ from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
 from models.user import User
-from models.payment import Payment
 from database import mongo
 from util import deserialize_json, login_required
 

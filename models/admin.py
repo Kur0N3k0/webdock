@@ -1,4 +1,5 @@
 from models.user import User
+import uuid
 
 class Admin(User):
     def __init__(self, username: str, password: str, level: int, _uuid: uuid.UUID):

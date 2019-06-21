@@ -10,11 +10,11 @@ class Payment(object):
         self.uuid = _uuid
     
     def purchase(self, price):
-        pass
+        raise "Payment::purchase not implemented"
 
     def deposit(self, amount):
-        pass
+        raise "Payment::deposit not implemented"
     
     def history(self):
-        pass
+        raise "Payment::history not implemented"
     

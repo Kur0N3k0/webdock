@@ -116,7 +116,7 @@ def docker_build():
     image_uuid = str(uuid.uuid4())
     container_uuid = str(uuid.uuid4())
 
-    image = Image(uid, "", tag, "installing", image_uuid)
+    image = Image(uid, "", tag, "installing", sshport, image_uuid)
     db: wrappers.Collection = mongo.db.images
     db.insert_one(image.__dict__)
 
@@ -141,7 +141,7 @@ def docker_build():
 
     # container start
     container_id = image.run(tag, port=sshport)
-    container = Container(uid, tag, "start", image_uuid, container_id, container_uuid)
+    container = Container(uid, tag, "start", image_uuid, container_id, sshport, container_uuid)
     container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
@@ -166,7 +166,7 @@ def docker_run(sid: uuid.UUID):
     
     container_id = image.run(tag, port=sshport)
     container_uuid = str(uuid.uuid4())
-    container = Container(uid, tag, "start", sid, container_id, container_uuid)
+    container = Container(uid, tag, "start", sid, container_id, sshport, container_uuid)
     container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
