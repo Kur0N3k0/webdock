@@ -2,13 +2,12 @@ from dockerengine import client
 import json, io
 
 class DockerImageAPI(object):
-    def getImages(self):
+    @staticmethod
+    def getImages():
         return client.images()
 
-    def build(self, path, rootpass, tag=""):
-        if tag != "":
-            self.tag = tag
-
+    @staticmethod
+    def build(path, rootpass, tag):
         df = open(path, "r").read()
         df += """
 RUN apt-get -y install openssh-server
@@ -18,25 +17,24 @@ CMD echo 0 > /proc/sys/kernel/yama/ptrace_scope
 CMD /etc/init.d/ssh start && /bin/bash -c "while true; do echo 'still alive'; sleep 600; done"
 """.format(rootpass)
         f = io.BytesIO(df.encode())
-        build_result = client.build(fileobj=f, tag=self.tag, rm=True)
+        build_result = client.build(fileobj=f, tag=tag, rm=True)
         result = [ json.loads(line) for line in build_result ]
-        imgs = client.images(name=self.tag.split(":")[0])
+        imgs = client.images(name=tag.split(":")[0])
 
         return result, imgs
 
-    def run(self, image_tag, command=None, port=0):
-        if port != 0:
-            self.port = port
-
+    @staticmethod
+    def run(image_tag, command, port):
         return client.create_container(
             image=image_tag,
             command=command,
             ports=[22],
             host_config=client.create_host_config(
-                port_bindings={ 22: self.port }
+                port_bindings={ 22: port }
             )
         )['Id']
 
-    def delete(self, image_id):
+    @staticmethod
+    def delete(image_id):
         client.remove_image(image_id)
         return True

@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import session, redirect
+from flask import session, redirect, request
 from flask_pymongo import pymongo
 import string, random, json
 
@@ -18,6 +18,15 @@ def admin_required(func):
             return redirect("/signin")
         if session.get("level") == 0:
             return redirect("/")
+        return func(*args, **kwargs)
+    return deco
+
+def xtoken_required(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        token = request.headers.get("X-Access-Token")
+        if not token:
+            return redirect("/api/v1/error")
         return func(*args, **kwargs)
     return deco
 

@@ -1,25 +1,18 @@
 from classes.api.api import API
+import glob
 
 class FilesystemAPI(API):
-    def __init__(self):
+    def listing(self, tenant, path):
+        return glob.iglob("upload/{}/{}".format(tenant, path), recursive=True)
+
+    def mkdir(self, path):
         pass
 
-    def mkdir(self):
-        pass
-
-    def rmdir(self):
+    def rmdir(self, path):
         pass
     
-    def open(self):
-        pass
-
-    def read(self):
-        pass
-
-    def write(self):
-        pass
-
-    def close(self):
+    def write(self, file):
         pass
     
-    
+    def read(self, file):
+        pass

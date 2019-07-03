@@ -4,6 +4,9 @@ from flask import Flask, url_for, request, session, render_template, redirect, B
 from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
+from classes.api.dockerimage import DockerImageAPI
+from classes.api.dockercontainer import DockerContainerAPI
+
 from models.image import Image
 from models.container import Container
 from models.dockerfile import Dockerfile
@@ -140,7 +143,7 @@ def docker_build():
     #    return error("Dockerfile::Image::build fail")
 
     # container start
-    container_id = image.run(tag, port=sshport)
+    container_id = DockerImageAPI.run(tag, "", sshport) #image.run(tag, port=sshport)
     container = Container(uid, tag, "start", image_uuid, container_id, sshport, container_uuid)
     container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
@@ -164,10 +167,11 @@ def docker_run(sid: uuid.UUID):
     if not image:
         return json_result(-1, "Docker::Images::rmi failed")
     
-    container_id = image.run(tag, port=sshport)
+    container_id = DockerImageAPI.run(tag, "", sshport) # image.run(tag, port=sshport)
     container_uuid = str(uuid.uuid4())
+    DockerContainerAPI.start(container_id)
+
     container = Container(uid, tag, "start", sid, container_id, sshport, container_uuid)
-    container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
 
@@ -200,7 +204,8 @@ def docker_rmi(sid: uuid.UUID):
     db.update({ "uuid": sid }, image.__dict__)
 
     # delete image
-    image.delete(image.tag)
+    #image.delete(image.tag)
+    DockerImageAPI.delete(image.tag)
 
     db.delete_one({ "uuid": sid })
 
@@ -221,7 +226,8 @@ def docker_start(sid: uuid.UUID):
 
     # container start & check
     try:
-        container.start(container.short_id)
+        #container.start(container.short_id)
+        DockerContainerAPI.start(container.short_id)
 
         container.status = "start"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
@@ -248,7 +254,8 @@ def docker_stop(sid: uuid.UUID):
 
     # container stop & check
     try:
-        container.stop(container.short_id)
+        #container.stop(container.short_id)
+        DockerContainerAPI.stop(container.short_id)
 
         container.status = "stop"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
@@ -274,7 +281,8 @@ def docker_rm(sid: uuid.UUID):
     db.update({ "uid": uid, "uuid": sid }, container.__dict__)
 
     try:
-        container.remove(container.short_id)
+        #container.remove(container.short_id)
+        DockerContainerAPI.remove(container.short_id)
 
         container.status = "remove"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)

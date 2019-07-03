@@ -27,12 +27,14 @@ from routers.dockers import docker_api
 from routers.dockerfile import dockerfile_api
 from routers.payment import payment_api
 from routers.admin import admin_api
+from routers.api import api_api
 
 app.register_blueprint(user_api)
 app.register_blueprint(docker_api)
 app.register_blueprint(dockerfile_api)
 app.register_blueprint(payment_api)
 app.register_blueprint(admin_api)
+app.register_blueprint(api_api)
 
 @app.route("/")
 @app.route("/index")

@@ -5,7 +5,7 @@ from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
 from database import mongo
-from models.payment import Payment
+from classes.payment.payment import Payment
 
 payment_api = Blueprint("payment_api", __name__)
 
