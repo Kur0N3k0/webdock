@@ -11,11 +11,12 @@ from classes.api.dockerimage import DockerImageAPI
 from classes.api.dockercontainer import DockerContainerAPI
 from classes.api.filesystem import FilesystemAPI
 
+from models.user import User
 from models.image import Image
 from models.container import Container
 from models.token import Token
 
-from util import deserialize_json, json_result, xtoken_required
+from util import deserialize_json, json_result, xtoken_required, xtoken_valid, xtoken_user
 
 api_api = Blueprint("api_api", __name__, url_prefix="/api")
 authapi = AuthAPI()
@@ -31,67 +32,92 @@ def api_index():
 def api_request_auth():
     tenant = request.form["tenant"]
     password = request.form["password"]
-    return authapi.signin(tenant, password)
+    result = authapi.signin(tenant, password)
+    return json_result(0, result)
 
-@xtoken_required
 @api_api.route("/v1/images")
+@xtoken_required
 def api_images():
-
-    pass
-
-@xtoken_required
-@api_api.route("/v1/containers")
-def api_containers():
-    pass
-
-@xtoken_required
-@api_api.route("/v1/image/rm")
-def api_image_rm():
-    pass
-
-@xtoken_required
-@api_api.route("/v1/container/rm")
-def api_container_rm():
-    pass
-
-@xtoken_required
-@api_api.route("/v1/image/<uuid:sid>")
-def api_image_detail(sid: uuid.UUID):
-    pass
-
-@xtoken_required
-@api_api.route("/v1/container/<uuid:sid>")
-def api_container_detail(sid: uuid.UUID):
-    pass
-
-@xtoken_required
-@api_api.route("/v1/image/run/<uuid:sid>")
-def api_image_run(sid: uuid.UUID):
-    pass
-
-@xtoken_required
-@api_api.route("/v1/container/start/<uuid:sid>")
-def api_container_start(sid: uuid.UUID):
-    pass
-
-@xtoken_required
-@api_api.route("/v1/container/stop/<uuid:sid>")
-def api_container_stop(sid: uuid.UUID):
-    pass
-
-@xtoken_required
-@api_api.route("/v1/directory/<path:str>")
-def api_directory(path: str):
-    token_db: wrappers.Collection = mongo.db.token
+    user = xtoken_user(AuthAPI.getXToken())
+    img_db: wrappers.Collection = mongo.db.images
+    image: list = deserialize_json(Image, img_db.find({ "uid": user.uuid }))
+    return json_result(0, image)
     
-    token = request.headers.get("X-Access-Token")
-    if not token:
-        return json_result(-1, "Invalid access token")
-    token: Token = deserialize_json(Token, token_db.find_one({ "token": token }))
-
-    return fsapi.listing(token.tenant, path)
-
+@api_api.route("/v1/containers")
 @xtoken_required
+def api_containers():
+    user = xtoken_user(AuthAPI.getXToken())
+    con_db: wrappers.Collection = mongo.db.containers
+    container: list = deserialize_json(Container, con_db.find({ "uid": user.uuid }))
+    return json_result(0, container)
+
+@api_api.route("/v1/image/rm/<uuid:sid>")
+@xtoken_required
+def api_image_rm(sid):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    DockerImageAPI.delete(image.image_id)
+    return json_result(0, "image removed")
+
+@api_api.route("/v1/container/rm/<uuid:sid>")
+@xtoken_required
+def api_container_rm(sid):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    DockerContainerAPI.remove(container.container_id)
+    return json_result(0, "container removed")
+
+@api_api.route("/v1/image/<uuid:sid>")
+@xtoken_required
+def api_image_detail(sid: uuid.UUID):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    return json_result(0, image)
+
+@api_api.route("/v1/container/<uuid:sid>")
+@xtoken_required
+def api_container_detail(sid: uuid.UUID):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    return json_result(0, container)
+
+@api_api.route("/v1/image/run/<uuid:sid>/<int:port>")
+@xtoken_required
+def api_image_run(sid: uuid.UUID, port: int):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    DockerImageAPI.run(image.tag, "", port)
+    return json_result(0, "image run")
+
+@api_api.route("/v1/container/start/<uuid:sid>")
+@xtoken_required
+def api_container_start(sid: uuid.UUID):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    DockerContainerAPI.start(container.container_id)
+    return json_result(0, "container start")
+
+@api_api.route("/v1/container/stop/<uuid:sid>")
+@xtoken_required
+def api_container_stop(sid: uuid.UUID):
+    user: User = xtoken_user(AuthAPI.getXToken())
+    db: wrappers.Collection = mongo.db.images
+    container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    DockerContainerAPI.stop(container.container_id)
+    return json_result(0, "container stop")
+
+@api_api.route("/v1/directory/<path:str>")
+@xtoken_required
+def api_directory(path: str):
+    xtoken = AuthAPI.getXToken()
+    return fsapi.listing(xtoken, path)
+
 @api_api.route("/v1/error")
 def api_error():
     return json_result(-1, "error")

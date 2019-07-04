@@ -1,4 +1,5 @@
 from classes.api.api import API
+from flask import request
 from flask_pymongo import PyMongo, wrappers
 from database import mongo
 from util import deserialize_json
@@ -19,11 +20,21 @@ class AuthAPI(API):
             return "", 401
 
         token_db: wrappers.Collection = mongo.db.token
+        result: Token = deserialize_json(Token, token_db.find_one({ "tenant": tenant }))
+        if result != None:
+            if result.expire_date + 7200 > time.time():
+                t = time.time()
+                xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
+                result = Token(tenant, time.time() + 7200, xtoken)
+                token_db.update_one({ "tenant": tenant }, result.__dict__)
+        else:
+            t = time.time()
+            xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
+            result = Token(tenant, time.time() + 7200, xtoken)
+            token_db.insert_one(result.__dict__)
 
-        t = time.time()
-        xtoken = hashlib.sha1(tenant + str(t)).hexdigest()
-        token = Token(tenant, time.time() + 7200, xtoken)
-
-        db.insert_one(token.__dict__)
-
-        return token.__dict__
+        return result.__dict__
+    
+    @staticmethod
+    def getXToken():
+        return request.headers.get("X-Access-Token")

@@ -5,4 +5,4 @@ class User(object):
         self.username = username
         self.password = password
         self.level = level
-        self.uuid = _uuid
+        self.uuid = str(_uuid)

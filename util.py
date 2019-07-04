@@ -1,6 +1,12 @@
 from functools import wraps
 from flask import session, redirect, request
-from flask_pymongo import pymongo
+from flask_pymongo import pymongo, wrappers
+
+from database import mongo
+from classes.api.auth import AuthAPI
+from models.token import Token
+from models.user import User
+
 import string, random, json
 
 def login_required(func):
@@ -25,20 +31,36 @@ def xtoken_required(func):
     @wraps(func)
     def deco(*args, **kwargs):
         token = request.headers.get("X-Access-Token")
-        if not token:
+        if not token or xtoken_valid(token):
             return redirect("/api/v1/error")
         return func(*args, **kwargs)
     return deco
+
+def xtoken_valid(xtoken):
+    token_db: wrappers.Collection = mongo.db.token
+    token: Token = deserialize_json(Token, token_db.find_one({ "token": xtoken }))
+    if not token:
+        return False
+    return True
+
+def xtoken_user(xtoken):
+    token_db: wrappers.Collection = mongo.db.token
+    token: Token = deserialize_json(Token, token_db.find_one({ "token": xtoken }))
+    db: wrappers.Collection = mongo.db.users
+    return deserialize_json(User, db.find_one({ "uuid": token.tenant }))
 
 def randomString(stringLength):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 def error(msg):
-    return json.dumps([{"errorDetail": msg}])
+    return json.dumps([{ "errorDetail": msg }])
 
 def json_result(code, msg):
-    return json.dumps({"code": code, "msg": msg})
+    try:
+        return json.dumps({ "code": code, "msg": msg.__dict__ })
+    except:
+        return json.dumps({ "code": code, "msg": msg })
 
 def deserialize_json(cls=None, data=None):
     if data == None:
