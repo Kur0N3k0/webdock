@@ -8,7 +8,7 @@ class FilesystemAPI(API):
         self.base = base
 
     def listing(self, username, path):
-        result = { "is_base": True, "path": "/file/{}".format(path), "dir": [], "file": [] }
+        result = { "is_base": True, "path": "/file/" + path, "dir": [], "file": [] }
         for f in glob.glob(self.base + username + "/" + path + "/*"):
             if os.path.isdir(f):
                 result["dir"] += [ os.path.basename(f) ]

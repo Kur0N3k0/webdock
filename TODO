@@ -1,12 +1,11 @@
 Idea
-- API
-- Payment daemon implement 
-- Coupon implement
+- API 70%
+- Payment daemon implement 0%
+- Coupon implement 0%
 # - Image sharing
-- Image commit & export
-- View container information
-- User folder management class implement
-# - Image statistics
+- Image commit & export 50%
+- View container information 50%
+- User folder management class implement 50%
  webdock admin server
         |   |
 ===================== <- report image information
