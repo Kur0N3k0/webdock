@@ -17,7 +17,6 @@ def payment():
 @payment_api.route("/payment/<int:ptype>")
 def payment_set(ptype:int):
     uid = session["uuid"]
-    
-    
+
 
     return ""

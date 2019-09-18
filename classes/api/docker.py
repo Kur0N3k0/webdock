@@ -4,6 +4,8 @@ from classes.api.dockercontainer import DockerContainerAPI
 
 class DockerAPI(API):
     def __init__(self):
-        super()
         self.image = DockerImageAPI()
         self.container = DockerContainerAPI()
+    
+    def logging(self):
+        pass

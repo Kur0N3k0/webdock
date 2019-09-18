@@ -19,6 +19,9 @@ def signup():
         username = request.form["username"]
         password = request.form["password"]
 
+        if "../" in username:
+            return render_template("user/signup.html")
+
         db: wrappers.Collection = mongo.db.users
         result = db.find_one({ "username": username })
         if result != None:

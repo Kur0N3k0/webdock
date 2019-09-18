@@ -3,7 +3,7 @@ from flask import session, redirect, request
 from flask_pymongo import pymongo, wrappers
 
 from database import mongo
-from classes.api.auth import AuthAPI
+#from classes.api.auth import AuthAPI
 from models.token import Token
 from models.user import User
 

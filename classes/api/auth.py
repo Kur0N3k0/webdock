@@ -10,9 +10,6 @@ from models.token import Token
 import time, hashlib
 
 class AuthAPI(API):
-    def __init__(self):
-        pass
-    
     def signin(self, tenant, password):
         db: wrappers.Collection = mongo.db.users
         result: User = deserialize_json(User, db.find_one({ "uuid": tenant, "password": password }))
@@ -38,3 +35,6 @@ class AuthAPI(API):
     @staticmethod
     def getXToken():
         return request.headers.get("X-Access-Token")
+
+    def logging(self):
+        pass

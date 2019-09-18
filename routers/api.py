@@ -20,7 +20,7 @@ from util import deserialize_json, json_result, xtoken_required, xtoken_valid, x
 
 api_api = Blueprint("api_api", __name__, url_prefix="/api")
 authapi = AuthAPI()
-fsapi = FilesystemAPI()
+fsapi = FilesystemAPI("./upload/")
 
 @api_api.route("/")
 @api_api.route("/v1")
