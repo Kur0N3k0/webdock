@@ -16,6 +16,7 @@ from util import deserialize_json, login_required, randomString, error, json_res
 
 docker_api = Blueprint("docker_api", __name__)
 docker_daemon = DockerDaemon()
+docker_daemon.start()
 
 @docker_api.route("/docker", methods=["GET"])
 @docker_api.route("/docker/list", methods=["GET"])

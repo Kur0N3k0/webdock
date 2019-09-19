@@ -1,6 +1,7 @@
 import uuid
 import time
 import os
+import shutil
 import json
 import glob
 
@@ -12,7 +13,7 @@ from werkzeug.utils import secure_filename
 from models.image import Image
 from models.dockerfile import Dockerfile
 from database import mongo
-from util import deserialize_json, login_required
+from util import deserialize_json, login_required, json_result
 
 from classes.api.filesystem import FilesystemAPI
 
@@ -40,9 +41,9 @@ def userfile():
 def userfile_listing(path: str):
     base = userfile_base + session["username"] + "/"
     result = { "is_base": False, "path": path, "dir": [], "file": [] }
+
     if "../" in path:
         return render_template("userfile/list.html", result=result)
-    
     if os.path.isfile(base + path):
         return send_file(base + path)
 
@@ -51,28 +52,72 @@ def userfile_listing(path: str):
 
     return render_template("userfile/list.html", result=result)
 
-@userfile_api.route("/file/mkdir", methods=["GET"])
+@userfile_api.route("/file/mkdir", methods=["POST"])
 def userfile_mkdir():
-    
-    return ""
+    base = userfile_base + session["username"] + "/"
+    path = base + request.form["dir"]
 
-@userfile_api.route("/file/rmdir", methods=["GET"])
+    if "../" in path:
+        return json_result(-1, "invalid path")
+    if not os.path.exists(path):
+        os.makedirs(path)
+        return json_result(0, "success")
+
+    return json_result(-1, "exist path")
+
+@userfile_api.route("/file/rmdir", methods=["POST"])
 def userfile_rmdir():
-    # listing
-    return ""
+    base = userfile_base + session["username"] + "/"
+    path = base + request.form["dir"]
 
-@userfile_api.route("/file/rm", methods=["GET"])
+    if "../" in path:
+        return json_result(-1, "invalid path")
+    if not os.path.exists(path):
+        return json_result(-1, "path not exist")
+
+    os.removedirs(path)
+    return json_result(0, "success")
+
+@userfile_api.route("/file/rm", methods=["POST"])
 def userfile_rm():
-    # listing
-    return ""
+    base = userfile_base + session["username"] + "/"
+    path = base + request.form["file"]
 
-@userfile_api.route("/file/mv", methods=["GET"])
+    if "../" in path:
+        return json_result(-1, "invalid path")
+    if not os.path.exists(path):
+        return json_result(-1, "file not exist")
+    if not os.path.isfile(path):
+        return json_result(-1, "invalid type")
+
+    os.remove(path)
+    return json_result(0, "success")
+
+@userfile_api.route("/file/mv", methods=["POST"])
 def userfile_mv():
-    # listing
-    return ""
+    base = userfile_base + session["username"] + "/"
+    src = base + request.form["src"]
+    dst = base + request.form["dst"]
 
-@userfile_api.route("/file/cp", methods=["GET"])
+    if "../" in src or "../" in dst:
+        return json_result(-1, "invalid path")
+    if not os.path.exists(src) or not os.path.exists(dst):
+        return json_result(-1, "invalid path")
+    
+    shutil.move(src, dst)
+    return json_result(0, "success")
+
+@userfile_api.route("/file/cp", methods=["POST"])
 def userfile_cp():
-    # listing
-    return ""
+    base = userfile_base + session["username"] + "/"
+    src = base + request.form["src"]
+    dst = base + request.form["dst"]
+
+    if "../" in src or "../" in dst:
+        return json_result(-1, "invalid path")
+    if not os.path.exists(src):
+        return json_result(-1, "invalid path")
+    
+    shutil.copy(src, dst)
+    return json_result(0, "success")
 
