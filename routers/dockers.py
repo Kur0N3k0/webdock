@@ -6,6 +6,7 @@ from flask_uuid import FlaskUUID
 
 from classes.api.dockerimage import DockerImageAPI
 from classes.api.dockercontainer import DockerContainerAPI
+from classes.daemon.dockerdaemon import DockerDaemon
 
 from models.image import Image
 from models.container import Container
@@ -14,6 +15,7 @@ from database import mongo
 from util import deserialize_json, login_required, randomString, error, json_result
 
 docker_api = Blueprint("docker_api", __name__)
+docker_daemon = DockerDaemon()
 
 @docker_api.route("/docker", methods=["GET"])
 @docker_api.route("/docker/list", methods=["GET"])
@@ -144,10 +146,12 @@ def docker_build():
 
     # container start
     container_id = DockerImageAPI.run(tag, "", sshport) #image.run(tag, port=sshport)
-    container = Container(uid, tag, "start", image_uuid, container_id, sshport, container_uuid)
+    container = Container(uid, tag, "start", image_uuid, sshport, container_id, container_uuid)
     container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
+
+    docker_daemon.notify(container_id)
 
     return json_result(0, result)
 
@@ -231,6 +235,7 @@ def docker_start(sid: uuid.UUID):
 
         container.status = "start"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
+
         return json_result(0, "container start")
     except:
         container.status = "failed"

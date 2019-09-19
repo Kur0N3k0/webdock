@@ -23,3 +23,7 @@ class DockerContainerAPI(object):
     @staticmethod
     def is_stopped(container_id):
         return True
+    
+    @staticmethod
+    def status(container_id):
+        return client.containers(filters={"id": container_id})
