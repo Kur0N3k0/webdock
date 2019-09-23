@@ -236,7 +236,6 @@ def docker_start(sid: uuid.UUID):
 
     # container start & check
     try:
-        #container.start(container.short_id)
         DockerContainerAPI.start(container.short_id)
 
         container.status = "start"
@@ -264,8 +263,6 @@ def docker_stop(sid: uuid.UUID):
     db.update({ "uid": uid, "uuid": sid }, container.__dict__)
 
     # container stop & check
-    
-        #container.stop(container.short_id)
     try:
         DockerContainerAPI.stop(container.short_id)
         container.status = "stop"

@@ -26,7 +26,7 @@ fsapi = FilesystemAPI("./upload/")
 @api_api.route("/v1")
 @api_api.route("/v1/")
 def api_index():
-    return "WebDock api is alive!"
+    return "WebDock api v1.0 is alive!"
 
 @api_api.route("/v1/request_auth", methods=["POST"])
 def api_request_auth():
@@ -112,11 +112,14 @@ def api_container_stop(sid: uuid.UUID):
     DockerContainerAPI.stop(container.container_id)
     return json_result(0, "container stop")
 
-@api_api.route("/v1/directory/<path:str>")
+@api_api.route("/v1/directory")
 @xtoken_required
-def api_directory(path: str):
-    xtoken = AuthAPI.getXToken()
-    return fsapi.listing(xtoken, path)
+def api_directory():
+    path = request.args.get("path")
+    if "../" in path:
+        return redirect("/v1/error")
+    user = xtoken_user(AuthAPI.getXToken())
+    return fsapi.listing(user.username, path)
 
 @api_api.route("/v1/error")
 def api_error():
