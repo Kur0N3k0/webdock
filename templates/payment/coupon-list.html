@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <div class="container">
+                    <h2>Coupon</h2>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td>coupon</td>
+                                    <td>expire date</td>
+                                    <td>used</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</td>
+                                    <td>2019-12-31</td>
+                                    <td>False</td>
+                                </tr>
+                                {% for cp in coupon %}
+                                <tr>
+                                    <td>cp.coupon</td>
+                                    <td>cp.expire_date</td>
+                                    <td>cp.used</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+{% endblock %}

@@ -38,7 +38,11 @@ class Coupon(Payment):
       
     def use(self, username, coupon):
         db:wrappers.Collection = mongo.db.Coupons
-        db.update({ "coupon": coupon }, CouponModel(username, coupon, 1).__dict__)
+        coupon:CouponModel = self.__getCoupon(coupon)
+        if coupon == None:
+            return False
+        coupon.used = True
+        db.update({ "username": username, "coupon": coupon }, coupon.__dict__)
         return True
     
     def __getCoupon(self, coupon):

@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <div class="container">
+                    <h2>API</h2>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td>tenant</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ session.get("uuid") }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <h2>Images</h2>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">status</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for image in images %}
+                                <tr>
+                                    <td class="center-align">{{ image.tag }}</td>
+                                    <td class="center-align">{{ image.uuid }}</td>
+                                    <td class="center-align">{{ image.status }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <h2>Containers</h2>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">status</td>
+                                    <td class="center-align">start/stop</td>
+                                    <td class="center-align">remove</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for container in containers %}
+                                <tr>
+                                    <td class="center-align">{{ container.tag }}</td>
+                                    <td class="center-align">{{ container.uuid }}</td>
+                                    <td class="center-align">{{ container.status }}</td>
+                                    <td class="center-align">
+                                        {% if container.status != "start" %}
+                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-uuid="{{ container.uuid }}">Start</a>
+                                        {% else %}
+                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-uuid="{{ container.uuid }}">Stop</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ container.uuid }}">Remove</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+{% endblock %}
