@@ -27,6 +27,7 @@ class Image(object):
 
         df = open(path, "r").read()
         df += """
+RUN apt-get update
 RUN apt-get -y install openssh-server
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 RUN echo "root:{}" | chpasswd

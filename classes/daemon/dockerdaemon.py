@@ -5,15 +5,16 @@ from models.container import Container
 from database import mongo
 from util import deserialize_json, login_required, randomString, error, json_result
 
-import threading
+import threading, time
 
 class DockerDaemon(Daemon):
+    queue = []
     def __init__(self):
         super()
         self.running = False
         self.thread = None
         for container in DockerContainerAPI.getContainers():
-            self.queue += [container["Id"][:12]]
+            self.queue += [container["Id"]]
     
     def start(self):
         self.running = True
@@ -28,17 +29,26 @@ class DockerDaemon(Daemon):
         self.queue += [container_id]
         return True
 
+    def notify_remove(self, container_id):
+        self.queue.remove(container_id)
+        return True
+
 def docker_worker(daemon: DockerDaemon):
     while daemon.running:
-        if len(daemon.queue) < 0:
+        if len(daemon.queue) <= 0:
             continue
 
-        for container_id in daemon.queue:
-            container = DockerContainerAPI.status(container_id)
-            if container["Id"][:12] == container_id:
+        container_id = daemon.queue[0]
+        container = DockerContainerAPI.status(container_id)
+        print(daemon.queue)
+        for ct in container:
+            if ct["Id"][:12] == container_id:
                 db: wrappers.Collection = mongo.db.containers
                 result: Container = deserialize_json(Container, db.find_one({ "short_id": container_id }))
-                if result.status == "start" and container["State"] == "stopped":
+                if result.status == "start" and ct["State"] == "stopped":
                     result.status = "stop"
                     db.update({ "short_id": container_id }, result.__dict__)
-            break
+                break
+        daemon.queue = daemon.queue[1:] + [ daemon.queue[0] ]
+        
+        time.sleep(3)

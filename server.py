@@ -12,7 +12,7 @@ from models.container import Container
 from models.dockerfile import Dockerfile
 
 from database import mongo
-from dockerengine import docker
+#from dockerengine import c
 
 log = logging.Logger("webdock")
 

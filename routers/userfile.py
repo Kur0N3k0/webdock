@@ -34,13 +34,18 @@ def userfile():
         f.close()
 
     result = filesystem.listing(session["username"], "")
+    result["path"] = result["path"][6:]
     return render_template("userfile/list.html", result=result)
 
-@userfile_api.route("/file/<path>", methods=["GET"])
+@userfile_api.route("/file/view", methods=["GET"])
 @login_required
-def userfile_listing(path: str):
+def userfile_listing():
     base = userfile_base + session["username"] + "/"
+    path = request.args.get('path', default="/")
     result = { "is_base": False, "path": path, "dir": [], "file": [] }
+
+    if path == None:
+        return render_template("userfile/list.html", result=result)
 
     if "../" in path:
         return render_template("userfile/list.html", result=result)
@@ -48,6 +53,8 @@ def userfile_listing(path: str):
         return send_file(base + path)
 
     result = filesystem.listing(session["username"], path)
+    result["parent"] = os.path.normpath(path + "/..")
+    result["path"] = secure_filename(path)
     result["is_base"] = False
 
     return render_template("userfile/list.html", result=result)

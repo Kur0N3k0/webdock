@@ -106,17 +106,20 @@ def docker_build():
         return json_result(-1, "POST only")
     
     uid = session.get("uuid")
+    username = session.get("username")
     tag = request.form["tag"]
     dockfile = request.form["dockfile"]
     rootpass = request.form["rootpass"]
     sshport = int(request.form["sshport"])
 
-    fn = "upload/{}/{}/Dockerfile".format(uid, dockfile)
+    fn = "upload/{}/{}/Dockerfile".format(username, dockfile)
     with open(fn, "r") as f:
         df = f.read()
 
     name = tag.split(":")[0]
-    ver = tag.split(":")[1]
+    ver = "latest"
+    if len(tag.split(":")) == 1:
+        ver = tag.split(":")[1]
     tag = randomString(20 - len(name)) + name + ":" + ver
     
     image_uuid = str(uuid.uuid4())
@@ -132,21 +135,21 @@ def docker_build():
     if result == None:
         return json_result(-1, "Dockerfile is not exist")
 
-    #try:
+    try:
         # image build
-    image.status = "build"
-    db.update({ "uuid": image_uuid }, image.__dict__)
-    result, imgs = image.build(result.path, rootpass)
+        image.status = "build"
+        db.update({ "uuid": image_uuid }, image.__dict__)
+        result, imgs = DockerImageAPI.build(result.path, rootpass, tag)
 
-    image.status = "done"
-    db.update({ "uuid": image_uuid }, image.__dict__)
-    #except:
-    #    image.status = "done"
-    #    db.update({ "uuid": image_uuid }, image.__dict__)
-    #    return error("Dockerfile::Image::build fail")
+        image.status = "done"
+        db.update({ "uuid": image_uuid }, image.__dict__)
+    except:
+        image.status = "fail"
+        db.update({ "uuid": image_uuid }, image.__dict__)
+        return json_result(-1, "Dockerfile::Image::build fail")
 
     # container start
-    container_id = DockerImageAPI.run(tag, "", sshport) #image.run(tag, port=sshport)
+    container_id = DockerImageAPI.run(tag, "", sshport) # image.run(tag, port=sshport)
     container = Container(uid, tag, "start", image_uuid, sshport, container_id, container_uuid)
     container.start(container_id)
     db: wrappers.Collection = mongo.db.containers
@@ -176,9 +179,11 @@ def docker_run(sid: uuid.UUID):
     container_uuid = str(uuid.uuid4())
     DockerContainerAPI.start(container_id)
 
-    container = Container(uid, tag, "start", sid, container_id, sshport, container_uuid)
+    container = Container(uid, tag, "start", sid, sshport, container_id, container_uuid)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
+
+    docker_daemon.notify(container_id)
 
     return json_result(0, "Successfully run")
 
@@ -259,18 +264,18 @@ def docker_stop(sid: uuid.UUID):
     db.update({ "uid": uid, "uuid": sid }, container.__dict__)
 
     # container stop & check
-    try:
+    
         #container.stop(container.short_id)
+    try:
         DockerContainerAPI.stop(container.short_id)
-
         container.status = "stop"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
-        return json_result(0, "container stop")
     except:
         container.status = status
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
+        return json_result(-1, "Docker::Container::stop failed")
 
-    return json_result(-1, "Docker::Container::stop failed")
+    return json_result(0, "container stop")
 
 @docker_api.route("/docker/rm/<uuid:sid>", methods=["GET"])
 @login_required
@@ -293,6 +298,8 @@ def docker_rm(sid: uuid.UUID):
         container.status = "remove"
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)
         db.delete_one({ "uid": uid, "uuid": sid})
+
+        docker_daemon.notify_remove(container.short_id)
     except:
         container.status = status
         db.update({ "uid": uid, "uuid": sid }, container.__dict__)

@@ -29,22 +29,25 @@ def dockerfile():
 @login_required
 def dockerfile_upload():
     uid = session.get("uuid")
+    username = session.get("username")
     fn_uuid = uuid.uuid4()
 
-    path = "upload/" + uid
+    path = "upload/" + username
     if not os.path.exists(path):
         os.mkdir(path)
 
-    path = "{}/".format(path) + str(fn_uuid)
+    path = "{}/{}".format(path, str(fn_uuid))
     if not os.path.exists(path):
         os.mkdir(path)
 
     f = request.files["file"]
-    fn = path + "/" + secure_filename(f.filename)
+    fn = path + "/Dockerfile"
     f.save(fn)
 
+    filename = os.path.basename(secure_filename(f.filename))
+
     db: wrappers.Collection = mongo.db.dockerfile
-    db.insert_one(Dockerfile(uid, secure_filename(f.filename), fn, time.time(), str(fn_uuid)).__dict__)
+    db.insert_one(Dockerfile(uid, filename, fn, time.time(), str(fn_uuid)).__dict__)
     
     return ""
 

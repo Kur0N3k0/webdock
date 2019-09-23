@@ -1,7 +1,8 @@
 from classes.daemon.daemon import Daemon
-import threading
+import threading, time
 
 class PaymentDaemon(Daemon):
+    queue = []
     def __init__(self):
         super()
         self.running = False
@@ -17,7 +18,7 @@ class PaymentDaemon(Daemon):
         self.thread.join()
     
     def notify(self, payment):
-        self.queue.put(payment)
+        self.queue += [payment]
         return True
 
 def payment_worker(daemon: PaymentDaemon):
@@ -25,3 +26,4 @@ def payment_worker(daemon: PaymentDaemon):
         if daemon.queue.qsize() < 0:
             continue
         
+        time.sleep(10)
