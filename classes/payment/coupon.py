@@ -56,3 +56,13 @@ class Coupon(Payment):
             db.insert_one(CouponModel(username, coupon).__dict__)
             return True
         return False
+    
+    def remove(self, username, coupon):
+        db:wrappers.Collection = mongo.db.Coupons
+        if self.__getCoupon(coupon) != None:
+            db.delete_one(
+                { "username": username, "coupon": coupon },
+                CouponModel(username, coupon).__dict__
+            )
+            return True
+        return False
