@@ -49,6 +49,10 @@ def xtoken_user(xtoken):
     db: wrappers.Collection = mongo.db.users
     return deserialize_json(User, db.find_one({ "uuid": token.tenant }))
 
+def sanitize_input(data):
+
+    return data
+
 def randomString(stringLength):
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))

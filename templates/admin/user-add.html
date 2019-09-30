@@ -3,7 +3,7 @@
                 <div class="row">
                     <div class="col s3"></div>
                     <div class="col s6 m6">
-                        <form class="card" action="/signin" method="POST" name="singin">
+                        <form class="card" action="/admin/user/add" method="POST" name="signup">
                             <div class="card-content black-text">
                                 <div class="input-field">
                                     <input type="text" class="validate black-text" id="username" name="username">
@@ -15,8 +15,7 @@
                                 </div>
                             </div>
                             <div class="card-action center-align">
-                                <a class="waves-effect waves-light btn" onclick="document.forms['singin'].submit()">Signin</a>
-                                <!-- <a class="waves-effect waves-light btn" href="/signup">Signup</a> -->
+                                <a class="waves-effect waves-light btn" onclick="document.forms['signup'].submit()">Register</a>
                             </div>
                         </form>
                     </div>

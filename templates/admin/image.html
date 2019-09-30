@@ -1,0 +1,146 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <div class="container">
+                    <h2>Image - admin</h2>
+                    <div class="row">
+                        <div class="col s10 input-field">
+                            <input type="text" id="search" name="search" class="validate">
+                            <label for="search">Search</label>
+                        </div>
+                        <div class="col s2 input-field center-align">
+                            <a class="waves-effect waves-light btn" id="image-search">Search</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">stats</td>
+                                    <td class="center-align">run</td>
+                                    <td class="center-align">remove</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for image in images %}
+                                <tr>
+                                    <td class="center-align">{{ image.tag }}</td>
+                                    <td class="center-align">{{ image.uuid }}</td>
+                                    <td class="center-align" id="status_{{ image.tag }}">{{ image.status }}</td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="run(this)" data-tag="{{ image.tag }}" data-uuid="{{ image.uuid }}">Run</a>
+                                    </td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-tag="{{ image.tag }}" data-uuid="{{ image.uuid }}">Remove</a>
+                                    </td>
+                                </tr>
+                                <tr class="hide" id="{{ image.tag }}">
+                                    <td colspan="5">
+                                        <div class="container">
+                                            <div class="input-field">
+                                                <input type="text" id="tag" value="{{ image.tag }}" disabled>
+                                                <label for="tag">tag</label>
+                                            </div>
+                                            <div class="input-field">
+                                                <input type="text" id="ssh-port">
+                                                <label for="ssh-port">ssh port</label>
+                                            </div>
+                                            <div class="input-field center-align">
+                                                <a class="waves-effect waves-light btn" onclick="run_start('{{ image.uuid }}')">Start</a>
+                                            </div>
+                                            <div class="input-field center-align">
+                                                <div class="row">
+                                                    <form class="col s12">
+                                                        <div class="row">
+                                                            <div class="input-field col s12">
+                                                                <textarea id="build-result" class="materialize-textarea"></textarea>
+                                                                <label for="build-result">Result</label>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <script>
+                    const html = `
+<div class="preloader-wrapper small active">
+    <div class="spinner-layer spinner-blue-only">
+        <div class="circle-clipper left">
+            <div class="circle"></div>
+        </div>
+        <div class="gap-patch">
+            <div class="circle"></div>
+        </div>
+        <div class="circle-clipper right">
+            <div class="circle"></div>
+        </div>
+    </div>
+</div>`;
+
+                    function run(m) {
+                        const tag = $(m).attr("data-tag");
+                        if($("#" + tag).hasClass("hide")) {
+                            $("#" + tag).removeClass("hide");
+                        } else {
+                            $("#" + tag).addClass("hide");
+                        }
+                    }
+
+                    function run_start(tag) {
+                        $("#status_" + tag).html(html);
+                        $.post("/docker/run/" + tag, {
+                            tag: $("#" + tag + " #tag").val().replace("-", ":"),
+                            sshport: $("#" + tag + " #ssh-port").val()
+                        }).done((res) => {
+                            const result = JSON.parse(res);
+                            msg = "";
+                            for(item in result){
+                                for(key in result[item]) {
+                                    if(result[item][key] instanceof Object)
+                                        continue;
+                                    msg += result[item][key];
+                                }
+                            }
+                            $("#" + tag + " #build-result").val(msg);
+                            $("#status_" + tag).html("done");
+                        });
+                    }
+
+                    function remove(m) {
+                        const tag = $(m).attr("data-tag");
+                        $("#status_" + tag).html(html);
+                        $.get(
+                            "/docker/rmi/" + tag
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                                $("#status_" + tag).html("removed");
+                                $(m).text("removed");
+                                $(m).attr("disabled", true);
+                            }
+                        });
+                    }
+
+                    $(function(){
+                        $("#image-search").click(() => {
+                            const search = $("#search").val();
+                            $.post("/docker/images/search", {
+                                tag: search
+                            }).done((res) => {
+                                console.log(res);
+                            });
+                        });
+                    });
+                </script>
+{% endblock %}

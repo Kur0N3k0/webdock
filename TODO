@@ -1,13 +1,7 @@
 Idea
-- API 70%
+- API 80%
 - Payment daemon implement 0%
-- Coupon implement 0%
-# - Image sharing
+- Coupon implement 80% # UI implement left
 - Image commit & export 50%
-- View container information 50%
-- User folder management class implement 50%
- webdock admin server
-        |   |
-===================== <- report image information
-|   |   |   |   |   |
-c   c   c   c   c   c <- webdock client service
+- View image/container information 100%
+- User folder management class implement 80% # UI implement left

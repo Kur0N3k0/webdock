@@ -10,30 +10,29 @@ from util import deserialize_json, login_required
 
 user_api = Blueprint("user_api", __name__)
 
-@user_api.route("/signup", methods=["GET", "POST"])
+#@user_api.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
         return render_template("user/signup.html")
 
-    elif request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+    username = request.form["username"]
+    password = request.form["password"]
 
-        if "../" in username:
-            return render_template("user/signup.html")
+    if "../" in username:
+        return render_template("user/signup.html")
 
-        db: wrappers.Collection = mongo.db.users
-        result = db.find_one({ "username": username })
-        if result != None:
-            return "exist user"
+    db: wrappers.Collection = mongo.db.users
+    result = db.find_one({ "username": username })
+    if result != None:
+        return "exist user"
 
-        u_uuid = uuid.uuid4()
-        user = User(username, password, 0, u_uuid)
-        db.insert_one(user.__dict__)
+    u_uuid = uuid.uuid4()
+    user = User(username, password, 0, u_uuid)
+    db.insert_one(user.__dict__)
 
-        session["username"] = username
-        session["uuid"] = str(u_uuid)
-        session["level"] = 0
+    session["username"] = username
+    session["uuid"] = str(u_uuid)
+    session["level"] = 0
 
     return redirect("/docker")
 

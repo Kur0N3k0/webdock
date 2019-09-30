@@ -40,7 +40,7 @@ def docker_worker(daemon: DockerDaemon):
 
         container_id = daemon.queue[0]
         container = DockerContainerAPI.status(container_id)
-        print(daemon.queue)
+        #print(daemon.queue)
         for ct in container:
             if ct["Id"][:12] == container_id:
                 db: wrappers.Collection = mongo.db.containers

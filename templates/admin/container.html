@@ -1,0 +1,127 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <div class="container">
+                    <h2>Container</h2>
+                    <div class="row">
+                        <div class="col s10 input-field">
+                            <input type="text" id="search" name="search" class="validate">
+                            <label for="search">Search</label>
+                        </div>
+                        <div class="col s2 input-field center-align">
+                            <a class="waves-effect waves-light btn" id="container-search">Search</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <td class="center-align">tag</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">status</td>
+                                    <td class="center-align">start/stop</td>
+                                    <td class="center-align">remove</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for container in containers %}
+                                <tr>
+                                    <td class="center-align">{{ container.tag }}</td>
+                                    <td class="center-align">{{ container.uuid }}</td>
+                                    <td class="center-align" id="status_{{ container.short_id }}">{{ container.status }}</td>
+                                    <td class="center-align">
+                                        {% if container.status != "start" %}
+                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-shortid="{{ container.short_id }}">Start</a>
+                                        {% else %}
+                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-shortid="{{ container.short_id }}">Stop</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-shortid="{{ container.short_id }}">Remove</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <script>
+                    const html = `
+<div class="preloader-wrapper small active">
+    <div class="spinner-layer spinner-blue-only">
+        <div class="circle-clipper left">
+            <div class="circle"></div>
+        </div>
+        <div class="gap-patch">
+            <div class="circle"></div>
+        </div>
+        <div class="circle-clipper right">
+            <div class="circle"></div>
+        </div>
+    </div>
+</div>`;
+                    function start(m) {
+                        const short_id = $(m).attr("data-shortid");
+                        $("#status_" + short_id).html(html);
+                        $.get(
+                            "/admin/container/start/" + short_id
+                        ).done((res) => {
+                           const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                                $("#status_" + uuid).html("start");
+                                $(m).text("stop");
+                                $(m).attr("onclick", "stop(this)");
+                            }
+                        });
+                    }
+
+                    function stop(m) {
+                        const short_id = $(m).attr("data-shortid");
+                        $("#status_" + short_id).html(html);
+                        $.get(
+                            "/admin/container/stop/" + short_id
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                                $("#status_" + uuid).html("stop");
+                                $(m).text("start");
+                                $(m).attr("onclick", "start(this)");
+                            }
+                        });
+                    }
+
+                    function remove(m) {
+                        const short_id = $(m).attr("data-short");
+                        $("#status_" + short_id).html(html);
+                        $.get(
+                            "/admin/container/remove/" + short_id
+                        ).done((res) => {
+                            const json = JSON.parse(res);
+                            if(json["code"] != 0) {
+                                // error
+                            } else {
+                                // success
+                                $("#status_" + short_id).html("removed");
+                                $(m).text("removed");
+                                $(m).attr("disabled", true);
+                            }
+                        });
+                    }
+
+                    $(function(){
+                        $("#container-search").click(() => {
+                            const search = $("#search").val();
+                            $.post("/docker/containers/search",{
+                                tag: search
+                            }).done((res) => {
+                                console.log(res);
+                            });
+                        });
+                    });
+                </script>
+{% endblock %}

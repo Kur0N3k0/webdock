@@ -26,59 +26,88 @@ def admin_index():
 @admin_api.route("/admin/images")
 @admin_required
 def admin_images():
+    db: wrappers.Collection = mongo.db.images
+    udb: wrappers.Collection = mongo.db.users
     images = docker_api.image.getImages()
-    return render_template("/admin/image.html", images=images)
+    result = []
+    for image in images:
+        rimage = Image()
+        rimage.uid = "system"
+        rimage.uuid = "system"
+        rimage.status = "done"
+        rimage.tag = image["RepoTags"][0].replace(":", "-")
 
-@admin_api.route("/admin/images/remove/<uuid:sid>")
+        r: Image = deserialize_json(Image, db.find_one({ "tag": rimage.tag }))
+        if r != None:
+            rimage.uid = r.uid
+            rimage.uuid = r.uuid
+            rimage.status = r.status
+        u: User = deserialize_json(User, udb.find_one({ "uid": rimage.uid }))
+        if u != None:
+            rimage.uid = u.username
+        result += [rimage]
+    
+    return render_template("/admin/image.html", images=result)
+
+@admin_api.route("/admin/images/remove/<tag>")
 @admin_required
-def admin_images_remove(sid: uuid.UUID):
+def admin_images_remove(tag: str):
+    idx = tag.rfind("-")
+    tag = tag[:idx] + ":" + tag[idx + 1:]
     db: wrappers.Collection = mongo.db.images
-    image: Image = deserialize_json(Image, db.find_one({ "uuid": str(sid) }))
+    image: Image = deserialize_json(Image, db.find_one({ "tag": tag }))
+    if image == None:
+        return json_result(-1, "image not exists")
+    
     docker_api.image.delete(image.tag)
-    db.delete_one({ "uuid": str(sid) })
-    return json_result(0, "success")
-
-# not necessary
-@admin_api.route("/admin/images/build/<uuid:sid>", methods=["POST"])
-@admin_required
-def admin_images_build(sid: uuid.UUID):
-    user: User = Users.find_by_name(session["username"])
-    rootpass = request.form["rootpass"]
-    tag = request.form["tag"]
-    uid = user.uuid
-    image_uuid = str(uuid.uuid4())
-
-    image: Image = Image(uid, "", tag, "installing", 0, image_uuid)
-    db: wrappers.Collection = mongo.db.images
-    db.insert_one(image.__dict__)
-
-    db2: wrappers.Collection = mongo.db.dockerfile
-    dockerfile: Dockerfile = deserialize_json(Dockerfile, db2.find_one({ "uuid": str(sid) }))
-    if dockerfile == None:
-        return json_result(-1, "dockerfile not exist")
-
-    try:
-        image.status = "build"
-        db.update({ "uuid": image_uuid }, image.__dict__)
-        docker_api.image.build(dockerfile.path, rootpass, tag)
-    except:
-        pass
-
+    db.delete_one({ "tag": tag })
     return json_result(0, "success")
 
 @admin_api.route("/admin/containers")
 @admin_required
 def admin_containers():
     containers = docker_api.container.getContainers()
-    return render_template("/admin/container.html", containers=containers)
-
-@admin_api.route("/admin/containers/remove/<uuid:sid>")
-@admin_required
-def admin_containers_remove(sid: uuid.UUID):
     db: wrappers.Collection = mongo.db.containers
-    container: Container = deserialize_json(Container, db.find_one({ "uuid": sid }))
-    docker_api.container.remove(container.short_id)
-    db.delete_one({ "uuid": str(sid) })
+
+    result = []
+    for container in containers:
+        rcontainer: Container = Container()
+        rcontainer.uid = "system"
+        rcontainer.uuid = "system"
+        rcontainer.short_id = container["Id"]
+        rcontainer.tag = container["Image"]
+        rcontainer.status = container["State"]
+        r: Container = deserialize_json(Container, db.find_one({ "short_id": rcontainer.short_id }))
+        if r != None:
+            rcontainer.uid = r.uid
+            rcontainer.uuid = r.uuid
+            rcontainer.status = r.status
+        result += [rcontainer]
+
+    return render_template("/admin/container.html", containers=result)
+
+@admin_api.route("/admin/containers/start/<short_id>")
+@admin_required
+def admin_containers_start(short_id):
+    docker_api.container.start(short_id)
+    db: wrappers.Collection = mongo.db.containers
+    db.update({ "short_id": short_id }, { "status": "start" })
+    return json_result(0, "success")
+
+@admin_api.route("/admin/containers/stop/<short_id>")
+@admin_required
+def admin_containers_stop(short_id):
+    docker_api.container.stop(short_id)
+    db: wrappers.Collection = mongo.db.containers
+    db.update({ "short_id": short_id }, { "status": "stop" })
+    return json_result(0, "success")
+
+@admin_api.route("/admin/containers/remove/<short_id>")
+@admin_required
+def admin_containers_remove(short_id):
+    docker_api.container.remove(short_id)
+    db: wrappers.Collection = mongo.db.containers
+    db.delete_one({ "short_id": short_id })
     return json_result(0, "success")
 
 @admin_api.route("/admin/users")
@@ -95,12 +124,18 @@ def admin_users_add():
         return render_template("/admin/user-add.html")
     
     username = request.form["username"]
-    password = request.form["pasword"]
-    level = request.form["level"]
-    sid = uuid.uuid4()
-    user = User(username, password, level, sid)
-    
+    password = request.form["password"]
+
+    if "../" in username:
+        return json_result(0, "invalid username")
+
     db: wrappers.Collection = mongo.db.users
+    result = db.find_one({ "username": username })
+    if result != None:
+        return json_result(-1, "exist user")
+
+    u_uuid = uuid.uuid4()
+    user = User(username, password, 0, u_uuid)
     db.insert_one(user.__dict__)
 
     return json_result(0, "success")
