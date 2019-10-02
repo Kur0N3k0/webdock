@@ -35,7 +35,7 @@ def admin_images():
         rimage.uid = "system"
         rimage.uuid = "system"
         rimage.status = "done"
-        rimage.tag = image["RepoTags"][0].replace(":", "-")
+        rimage.tag = image["RepoTags"][0]
 
         r: Image = deserialize_json(Image, db.find_one({ "tag": rimage.tag }))
         if r != None:
@@ -45,6 +45,8 @@ def admin_images():
         u: User = deserialize_json(User, udb.find_one({ "uid": rimage.uid }))
         if u != None:
             rimage.uid = u.username
+        
+        rimage.tag = rimage.tag.replace(":", "-")
         result += [rimage]
     
     return render_template("/admin/image.html", images=result)
@@ -117,14 +119,12 @@ def admin_users():
     users: list = deserialize_json(User, db.find())
     return render_template("/admin/user.html", users=users)
 
-@admin_api.route("/admin/users/add", methods=["GET", "POST"])
+@admin_api.route("/admin/users/add", methods=["POST"])
 @admin_required
 def admin_users_add():
-    if request.method == "GET":
-        return render_template("/admin/user-add.html")
-    
     username = request.form["username"]
     password = request.form["password"]
+    level = int(request.form["level"])
 
     if "../" in username:
         return json_result(0, "invalid username")
@@ -135,7 +135,7 @@ def admin_users_add():
         return json_result(-1, "exist user")
 
     u_uuid = uuid.uuid4()
-    user = User(username, password, 0, u_uuid)
+    user = User(username, password, level, u_uuid)
     db.insert_one(user.__dict__)
 
     return json_result(0, "success")
@@ -143,6 +143,8 @@ def admin_users_add():
 @admin_api.route("/admin/users/remove/<uuid:sid>")
 @admin_required
 def admin_users_remove(sid: uuid.UUID):
+    if str(sid) == "b30d1e92-e356-4aca-8c3c-c20b7bf7dc76":
+        return json_result(-1, "master admin can't remove")
     db: wrappers.Collection = mongo.db.users
     db.delete_one({ "uuid": str(sid) })
     return json_result(0, "success")

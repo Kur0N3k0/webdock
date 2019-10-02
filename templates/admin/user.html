@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block content %}
                 <div class="container">
-                    <h2>Container</h2>
+                    <h2>Users</h2>
                     <div class="row">
                         <div class="col s10 input-field">
                             <input type="text" id="search" name="search" class="validate">
@@ -11,7 +11,7 @@
                             <a class="waves-effect waves-light btn" id="container-search">Search</a>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" id="user-table">
                         <table border="1">
                             <thead>
                                 <tr>
@@ -31,87 +31,20 @@
                                     {% else %}
                                         <td class="center-align">user</td>
                                     {% endif %}
-                                    <td class="center-align">
-                                        {{ user.uuid }}
-                                        <!--
-                                            <a class="waves-effect waves-light btn" onclick="remove(this)" data-shortid="">Remove</a>
-                                        -->
+                                    <td class="center-align" id="uuid">{{ user.uuid }}</td>
+                                    <td>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)">-</a>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    <div class="col s2 input-field left-align">
+                        <a class="waves-effect waves-light btn" id="user-add">+</a>
+                    </div>
                 </div>
                 <script>
-                    const html = `
-<div class="preloader-wrapper small active">
-    <div class="spinner-layer spinner-blue-only">
-        <div class="circle-clipper left">
-            <div class="circle"></div>
-        </div>
-        <div class="gap-patch">
-            <div class="circle"></div>
-        </div>
-        <div class="circle-clipper right">
-            <div class="circle"></div>
-        </div>
-    </div>
-</div>`;
-                    function start(m) {
-                        const short_id = $(m).attr("data-shortid");
-                        $("#status_" + short_id).html(html);
-                        $.get(
-                            "/admin/container/start/" + short_id
-                        ).done((res) => {
-                           const json = JSON.parse(res);
-                            if(json["code"] != 0) {
-                                // error
-                            } else {
-                                // success
-                                $("#status_" + uuid).html("start");
-                                $(m).text("stop");
-                                $(m).attr("onclick", "stop(this)");
-                            }
-                        });
-                    }
-
-                    function stop(m) {
-                        const short_id = $(m).attr("data-shortid");
-                        $("#status_" + short_id).html(html);
-                        $.get(
-                            "/admin/container/stop/" + short_id
-                        ).done((res) => {
-                            const json = JSON.parse(res);
-                            if(json["code"] != 0) {
-                                // error
-                            } else {
-                                // success
-                                $("#status_" + uuid).html("stop");
-                                $(m).text("start");
-                                $(m).attr("onclick", "start(this)");
-                            }
-                        });
-                    }
-
-                    function remove(m) {
-                        const short_id = $(m).attr("data-short");
-                        $("#status_" + short_id).html(html);
-                        $.get(
-                            "/admin/container/remove/" + short_id
-                        ).done((res) => {
-                            const json = JSON.parse(res);
-                            if(json["code"] != 0) {
-                                // error
-                            } else {
-                                // success
-                                $("#status_" + short_id).html("removed");
-                                $(m).text("removed");
-                                $(m).attr("disabled", true);
-                            }
-                        });
-                    }
-
                     $(function(){
                         $("#container-search").click(() => {
                             const search = $("#search").val();
@@ -121,6 +54,66 @@
                                 console.log(res);
                             });
                         });
+                        
+                        const user_add_html = `
+                        <tr>
+                            <td class="center-align">
+                                <input type="text" id="username">
+                            </td>
+                            <td class="center-align">
+                                <input type="text" id="password">
+                            </td>
+                            <td class="center-align input-field">
+                                <select id="level">
+                                    <option value="0">user</option>
+                                    <option value="1">admin</option>
+                                </select>
+                            </td>
+                            <td class="center-align input-field">
+                                <a class="waves-effect waves-light btn" onclick="commit(this);">commit</a>
+                            </td>
+                            <td class="center-align">
+                                <a class="waves-effect waves-light btn" onclick="gparent_remove(this);">-</a>
+                            </td>
+                        </tr>
+                        `;
+                        user_add_enable = () => {
+                            $("#user-table tbody").append(user_add_html);
+                        };
+
+                        $("#user-add").click(() => {
+                            user_add_enable();
+                            $('select').formSelect();
+                        });
+
+                        commit = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            username = $(parent).find("#username").val();
+                            password = $(parent).find("#password").val();
+                            level = $(parent).find("#level").val();
+
+                            $.post("/admin/users/add",{
+                                username: username,
+                                password: password,
+                                level: level
+                            }).done((res) => {
+                                console.log(res);
+                            });
+                        }
+
+                        remove = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            uuid = $(parent).find("#uuid").text();
+                            $.get("/admin/users/remove/" + uuid)
+                            .done((res) => {
+                                console.log(res);
+                            });
+                        }
+
+                        gparent_remove = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            $(parent).remove();
+                        }
                     });
                 </script>
 {% endblock %}
