@@ -19,21 +19,27 @@
                                     <td class="center-align">password</td>
                                     <td class="center-align">level</td>
                                     <td class="center-align">uuid</td>
+                                    <td></td>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for user in users %}
                                 <tr>
-                                    <td class="center-align">{{ user.username }}</td>
-                                    <td class="center-align">{{ user.password }}</td>
+                                    <td class="center-align" id="username">{{ user.username }}</td>
+                                    <td class="center-align" id="password">{{ user.password }}</td>
                                     {% if user.level == 1 %}
-                                        <td class="center-align">admin</td>
+                                        <td class="center-align" id="level">admin</td>
                                     {% else %}
-                                        <td class="center-align">user</td>
+                                        <td class="center-align" id="level">user</td>
                                     {% endif %}
                                     <td class="center-align" id="uuid">{{ user.uuid }}</td>
-                                    <td>
-                                        <a class="waves-effect waves-light btn" onclick="remove(this)">-</a>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="update(this)">
+                                            <i class="small material-icons">border_color</i>
+                                        </a>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)">
+                                            <i class="small material-icons">close</i>
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -63,17 +69,45 @@
                             <td class="center-align">
                                 <input type="text" id="password">
                             </td>
-                            <td class="center-align input-field">
+                            <td class="center-align">
                                 <select id="level">
                                     <option value="0">user</option>
                                     <option value="1">admin</option>
                                 </select>
                             </td>
-                            <td class="center-align input-field">
+                            <td class="center-align" id="uuid">
                                 <a class="waves-effect waves-light btn" onclick="commit(this);">commit</a>
                             </td>
                             <td class="center-align">
-                                <a class="waves-effect waves-light btn" onclick="gparent_remove(this);">-</a>
+                                <a class="waves-effect waves-light btn" onclick="gparent_remove(this);" id="remove">
+                                    <i class="small material-icons">close</i>
+                                </a>
+                            </td>
+                        </tr>
+                        `;
+
+                        const user_update_html = `
+                        <tr>
+                            <td class="center-align">
+                                <input type="text" id="username">
+                            </td>
+                            <td class="center-align">
+                                <input type="text" id="password">
+                            </td>
+                            <td class="center-align">
+                                <select id="level">
+                                    <option value="0">user</option>
+                                    <option value="1">admin</option>
+                                </select>
+                            </td>
+                            <td class="center-align" id="uuid"></td>
+                            <td class="center-align">
+                                <a class="waves-effect waves-light btn" onclick="doupdate(this);" id="update">
+                                    <i class="small material-icons">done</i>
+                                </a>
+                                <a class="waves-effect waves-light btn" onclick="gparent_remove(this);" id="remove">
+                                    <i class="small material-icons">close</i>
+                                </a>
                             </td>
                         </tr>
                         `;
@@ -86,18 +120,96 @@
                             $('select').formSelect();
                         });
 
+                        update = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            $(parent).after(user_update_html);
+                            $('select').formSelect();
+
+                            username = $(parent).find("#username").text();
+                            password = $(parent).find("#password").text();
+                            uuid = $(parent).find("#uuid").text();
+
+                            after = $(parent).next();
+                            $(after).find("#username").val(username);
+                            $(after).find("#password").val(password);
+                            $(after).find("#uuid").text(uuid);
+                        }
+
+                        doupdate = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            fusername = $(parent).find("#username");
+                            fpassword = $(parent).find("#password");
+                            flevel = $(parent).find("#level");
+                            fuuid = $(parent).find("#uuid");
+                            fupdate = $(parent).find("#update");
+                            fremove = $(parent).find("#remove");
+
+                            let before = $(parent).prev();
+                            busername = $(before).find("#username");
+                            bpassword = $(before).find("#password");
+                            blevel = $(before).find("#level");
+
+                            username = fusername.val();
+                            password = fpassword.val();
+                            level = flevel.val();
+                            uuid = fuuid.text();
+
+                            $.post("/admin/users/update/" + uuid, {
+                                username: username,
+                                password: password,
+                                level: level
+                            }).done((res) => {
+                                result = JSON.parse(res);
+                                if(result["code"] == 0) {
+                                    $(busername).val(username);
+                                    $(bpassword).val(password);
+                                    if(result["msg"]["level"] == 0)
+                                        $(blevel).val("user");
+                                    else
+                                        $(blevel).val("admin");
+                                    $(parent).remove();
+                                }
+                            });
+                        }
+
                         commit = (obj) => {
                             let parent = $(obj).parent().parent()[0];
-                            username = $(parent).find("#username").val();
-                            password = $(parent).find("#password").val();
-                            level = $(parent).find("#level").val();
+                            fusername = $(parent).find("#username");
+                            fpassword = $(parent).find("#password");
+                            flevel = $(parent).find("#level");
+                            fuuid = $(parent).find("#uuid");
+                            fremove = $(parent).find("#remove");
+
+                            username = fusername.val();
+                            password = fpassword.val();
+                            level = flevel.val();
 
                             $.post("/admin/users/add",{
                                 username: username,
                                 password: password,
                                 level: level
                             }).done((res) => {
-                                console.log(res);
+                                result = JSON.parse(res);
+                                if(result["code"] == 0) {
+                                    pusername = fusername.parent();
+                                    ppassword = fpassword.parent();
+                                    plevel = flevel.parent().parent();
+                                    puuid = fuuid;
+                                    premove = fremove;
+
+                                    pusername.empty();
+                                    pusername.text(username);
+                                    ppassword.empty();
+                                    ppassword.text(password);
+                                    plevel.empty();
+                                    if(level == 0)
+                                        plevel.text("user");
+                                    else
+                                        plevel.text("admin");
+                                    puuid.remove("a");
+                                    puuid.text(result["msg"]);
+                                    premove.attr("onclick", "remove(this)");
+                                }
                             });
                         }
 
@@ -106,7 +218,9 @@
                             uuid = $(parent).find("#uuid").text();
                             $.get("/admin/users/remove/" + uuid)
                             .done((res) => {
-                                console.log(res);
+                                result = JSON.parse(res);
+                                if(result["code"] === 0)
+                                    gparent_remove(obj);
                             });
                         }
 

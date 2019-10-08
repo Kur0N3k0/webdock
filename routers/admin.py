@@ -6,7 +6,7 @@ from flask_uuid import FlaskUUID
 
 from classes.user.user import Users
 from classes.payment.coupon import Coupon
-from models.docker_collection import DockerCollection
+from classes.api.docker import DockerAPI
 from models.image import Image
 from models.container import Container
 from models.dockerfile import Dockerfile
@@ -16,7 +16,7 @@ from database import mongo
 from util import deserialize_json, admin_required, json_result
 
 admin_api = Blueprint("admin_api", __name__)
-docker_api = DockerCollection()
+docker_api = DockerAPI()
 
 @admin_api.route("/admin")
 @admin_required
@@ -138,7 +138,7 @@ def admin_users_add():
     user = User(username, password, level, u_uuid)
     db.insert_one(user.__dict__)
 
-    return json_result(0, "success")
+    return json_result(0, str(u_uuid))
 
 @admin_api.route("/admin/users/remove/<uuid:sid>")
 @admin_required
@@ -164,7 +164,7 @@ def admin_users_update(sid: uuid.UUID):
         user.level = int(level)
     except:
         return json_result(-1, "level is not integer")
-    if user.level not in [0, 1]:
+    if user.level not in User.LEVELS:
         return json_result(-1, "invalid level")
 
     db: wrappers.Collection = mongo.db.users
@@ -174,7 +174,7 @@ def admin_users_update(sid: uuid.UUID):
 @admin_api.route("/admin/users/setlevel/<uuid:sid>/<int:level>")
 @admin_required
 def admin_users_setlevel(sid: uuid.UUID, level: int):
-    if level not in [0, 1]:
+    if level not in User.LEVELS:
         return json_result(-1, "invalid level")
 
     db: wrappers.Collection = mongo.db.users
@@ -183,6 +183,11 @@ def admin_users_setlevel(sid: uuid.UUID, level: int):
 
     db.update_one({ "uuid": str(sid) }, user.__dict__)
     return json_result(0, "success")
+
+@admin_api.route("/admin/coupon", methods=["GET"])
+@admin_required
+def admin_coupon():
+    return render_template("/admin/coupon.html")
 
 @admin_api.route("/admin/coupon/give", methods=["POST"])
 @admin_required

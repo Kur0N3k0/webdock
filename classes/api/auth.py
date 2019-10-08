@@ -10,24 +10,24 @@ from models.token import Token
 import time, hashlib
 
 class AuthAPI(API):
-    def signin(self, tenant, password):
+    def signin(self, username, password):
         db: wrappers.Collection = mongo.db.users
-        result: User = deserialize_json(User, db.find_one({ "uuid": tenant, "password": password }))
+        result: User = deserialize_json(User, db.find_one({ "username": username, "password": password }))
         if result == None:
             return "", 401
 
+        tenant = result.uuid
         token_db: wrappers.Collection = mongo.db.token
         result: Token = deserialize_json(Token, token_db.find_one({ "tenant": tenant }))
+        t = time.time()
         if result != None:
-            if result.expire_date + 7200 > time.time():
-                t = time.time()
+            if result.expire_date + 7200 > t:
                 xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
-                result = Token(tenant, time.time() + 7200, xtoken)
+                result = Token(tenant, t + 7200, xtoken)
                 token_db.update_one({ "tenant": tenant }, result.__dict__)
         else:
-            t = time.time()
             xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
-            result = Token(tenant, time.time() + 7200, xtoken)
+            result = Token(tenant, t + 7200, xtoken)
             token_db.insert_one(result.__dict__)
 
         return result.__dict__

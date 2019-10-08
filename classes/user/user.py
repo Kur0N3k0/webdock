@@ -11,6 +11,11 @@ class Users(object):
     def __init__(self):
         pass
     
+    def all():
+        db: wrappers.Collection = mongo.db.users
+        user: list = deserialize_json(User, db.find())
+        return user
+
     @staticmethod
     def find_by_name(username):
         db: wrappers.Collection = mongo.db.users

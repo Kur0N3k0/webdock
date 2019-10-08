@@ -1,9 +1,4 @@
-import uuid
-import time
-import os
-import shutil
-import json
-import glob
+import uuid, time, os, shutil, json, glob
 
 from flask import Flask, url_for, request, session, render_template, redirect, Blueprint, send_file
 from flask_pymongo import PyMongo, wrappers
@@ -33,7 +28,7 @@ def userfile():
         f.write("Hello world")
         f.close()
 
-    result = filesystem.listing(session["username"], "")
+    result = json.loads(filesystem.listing(session["username"], ""))["msg"]
     result["path"] = result["path"][6:]
     return render_template("userfile/list.html", result=result)
 
@@ -52,7 +47,7 @@ def userfile_listing():
     if os.path.isfile(base + path):
         return send_file(base + path)
 
-    result = filesystem.listing(session["username"], path)
+    result = json.loads(filesystem.listing(session["username"], path))["msg"]
     result["parent"] = os.path.normpath(path + "/..")
     result["path"] = secure_filename(path)
     result["is_base"] = False

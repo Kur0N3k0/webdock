@@ -1,0 +1,311 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
+                <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+                <div class="container">
+                    <h2>API document</h2>
+                    <div>
+                        <h5>getAPIToken</h5>
+                        <hr>
+                        <pre id="getAPIToken">
+                            <code class="http">
+POST /api/v1/request_auth HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+
+username=sample&password=sample
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": {"tenant": "ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76", "expire_date": 1562154520.1440587, "token": "81726d1a343bd363dcbd3fd9c5ad41908b85f9e9"}}
+                            </code>
+                        </pre>
+                        <h5>getImages</h5>
+                        <hr>
+                        <pre id="getImages">
+                            <code class="http">
+GET /api/v1/images HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': [{'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'os': '', 'tag': 'tavwlnswgktdpraykcat:latest', 'port': 7777, 'status': 'done', 'label': {'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'uuid': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e'}, 'uuid': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e'}]}
+                            </code>
+                        </pre>
+                        <h5>getContainers</h5>
+                        <hr>
+                        <pre id="getContainers">
+                            <code class="http">
+GET /api/v1/containers HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': [{'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'tag': 'tavwlnswgktdpraykcat:latest', 'status': 'start', 'image': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e', 'port': 7777, 'short_id': '6abd9e5c9c1f1480ec6e4332302746fcdeaccae1b69567dcd7921549807109e1', 'started_time': 1569850122.1332016, 'uuid': 'c0faadff-9438-4b7b-95ab-37f20de18702'}]}
+                            </code>
+                        </pre>
+                        <h5>removeImage</h5>
+                        <hr>
+                        <pre id="removeImage">
+                            <code class="http">
+GET /api/v1/image/rm/b42a57c6-e4d5-41b0-b5c5-f45a5807998e HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': 'image removed'}
+                            </code>
+                        </pre>
+                        <h5>removeContainer</h5>
+                        <hr>
+                        <pre id="removeContainer">
+                            <code class="http">
+GET /api/v1/container/rm/c0faadff-9438-4b7b-95ab-37f20de18702 HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': 'container removed'}
+                            </code>
+                        </pre>
+                        <h5>imageDetail</h5>
+                        <hr>
+                        <pre id="imageDetail">
+                            <code class="http">
+GET /api/v1/image/b42a57c6-e4d5-41b0-b5c5-f45a5807998e HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': {'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'os': '', 'tag': 'tavwlnswgktdpraykcat:latest', 'port': 7777, 'status': 'done', 'label': {'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'uuid': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e'}, 'uuid': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e'}}
+                            </code>
+                        </pre>
+                        <h5>containerDetail</h5>
+                        <hr>
+                        <pre id="containerDetail">
+                            <code class="http">
+GET /api/v1/container/c0faadff-9438-4b7b-95ab-37f20de18702 HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': {'uid': 'ad0d2f93-e356-4aca-8c3c-c20b7bf7dc76', 'tag': 'tavwlnswgktdpraykcat:latest', 'status': 'start', 'image': 'b42a57c6-e4d5-41b0-b5c5-f45a5807998e', 'port': 7777, 'short_id': '6abd9e5c9c1f1480ec6e4332302746fcdeaccae1b69567dcd7921549807109e1', 'started_time': 1569850122.1332016, 'uuid': 'c0faadff-9438-4b7b-95ab-37f20de18702'}}
+                            </code>
+                        </pre>
+                        <h5>imageRun</h5>
+                        <hr>
+                        <pre id="imageRun">
+                            <code class="http">
+GET /api/v1/image/run/b42a57c6-e4d5-41b0-b5c5-f45a5807998e/7777 HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': 'image run'}
+                            </code>
+                        </pre>
+                        <h5>containerStart</h5>
+                        <hr>
+                        <pre id="containerStart">
+                            <code class="http">
+GET /api/v1/container/start/c0faadff-9438-4b7b-95ab-37f20de18702 HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': 'container start'}
+                            </code>
+                        </pre>
+                        <h5>containerStop</h5>
+                        <hr>
+                        <pre id="containerStop">
+                            <code class="http">
+GET /api/v1/container/stop/c0faadff-9438-4b7b-95ab-37f20de18702 HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{'code': 0, 'msg': 'container stop'}
+                            </code>
+                        </pre>
+                        <h5>directory</h5>
+                        <hr>
+                        <pre id="directory">
+                            <code class="http">
+POST /api/v1/directory HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+path=.
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": {"is_base": true, "path": "/file/.", "dir": ["test", "25529b35-2445-4e90-9297-59a8cf0e4517"], "file": ["README.txt"]}}
+                            </code>
+                        </pre>
+                        <h5>upload</h5>
+                        <hr>
+                        <pre id="upload">
+                            <code class="http">
+POST /api/v1/directory/upload HTTP/1.1
+Host: example.org
+Content-Type: multipart/form-data; boundary=---UploadBoundaryWebDocker
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+---UploadBoundaryWebDocker
+Content-Disposition: form-data; name="path"; filename="README2.txt"
+Content-Type: text/plain
+
+./README2.txt
+---UploadBoundaryWebDocker
+Content-Disposition: form-data; name="data"; filename="README2.txt"
+Content-Type: application/octet-stream
+
+Hello World~ :3
+---UploadBoundaryWebDocker
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": "Hello World"}
+                            </code>
+                        </pre>
+                        <h5>download</h5>
+                        <hr>
+                        <pre id="download">
+                            <code class="http">
+POST /api/v1/directory/download HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+path=README.txt
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": "Hello World"}
+                            </code>
+                        </pre>
+                        <h5>removeFile</h5>
+                        <hr>
+                        <pre id="removeFile">
+                            <code class="http">
+POST /api/v1/directory/remove HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+path=README2.txt
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": "success"}
+                            </code>
+                        </pre>
+                        <h5>removeDirectory</h5>
+                        <hr>
+                        <pre id="removeDirectory">
+                            <code class="http">
+POST /api/v1/directory/removedir HTTP/1.1
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+X-Access-Token: 81726d1a343bd363dcbd3fd9c5ad41908b85f9e9
+
+path=./test
+                            </code>
+                            <code class="http">
+HTTP/1.0 200 OK
+Content-Type: text/html; charset=utf-8
+Server: Werkzeug/0.15.4 Python/3.7.3
+Date: Tue, 08 Oct 2019 09:25:14 GMT
+
+{"code": 0, "msg": "success"}
+                            </code>
+                        </pre>
+                    </div>
+                </div>
+                <script>hljs.initHighlightingOnLoad();</script>
+{% endblock %}

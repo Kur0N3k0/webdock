@@ -16,7 +16,7 @@ class FilesystemAPI(API):
                 result["dir"] += [ os.path.basename(f) ]
             else:
                 result["file"] += [ os.path.basename(f) ]
-        return result
+        return json_result(0, result)
 
     def mkdir(self, username, path):
         rpath = self.base + username + "/" + path

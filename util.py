@@ -7,7 +7,7 @@ from database import mongo
 from models.token import Token
 from models.user import User
 
-import string, random, json
+import string, random, json, time
 
 def login_required(func):
     @wraps(func)
@@ -31,7 +31,7 @@ def xtoken_required(func):
     @wraps(func)
     def deco(*args, **kwargs):
         token = request.headers.get("X-Access-Token")
-        if not token or xtoken_valid(token):
+        if not token or not xtoken_valid(token):
             return redirect("/api/v1/error")
         return func(*args, **kwargs)
     return deco
@@ -41,6 +41,10 @@ def xtoken_valid(xtoken):
     token: Token = deserialize_json(Token, token_db.find_one({ "token": xtoken }))
     if not token:
         return False
+    
+    if token.expire_date >= time.time():
+        return False
+
     return True
 
 def xtoken_user(xtoken):
@@ -61,6 +65,10 @@ def error(msg):
     return json.dumps([{ "errorDetail": msg }])
 
 def json_result(code, msg):
+    if isinstance(msg, list):
+        msg = [ item.__dict__ for item in msg ]
+        return json.dumps({ "code": code, "msg": msg })
+        
     try:
         return json.dumps({ "code": code, "msg": msg.__dict__ })
     except:

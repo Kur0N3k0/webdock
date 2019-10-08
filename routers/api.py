@@ -11,12 +11,14 @@ from classes.api.dockerimage import DockerImageAPI
 from classes.api.dockercontainer import DockerContainerAPI
 from classes.api.filesystem import FilesystemAPI
 
+from classes.user.user import User as CUser
+
 from models.user import User
 from models.image import Image
 from models.container import Container
 from models.token import Token
 
-from util import deserialize_json, json_result, xtoken_required, xtoken_valid, xtoken_user
+from util import deserialize_json, json_result, xtoken_required, xtoken_valid, xtoken_user, admin_required
 
 api_api = Blueprint("api_api", __name__, url_prefix="/api")
 authapi = AuthAPI()
@@ -26,16 +28,16 @@ fsapi = FilesystemAPI("./upload/")
 @api_api.route("/v1")
 @api_api.route("/v1/")
 def api_index():
-    return "WebDock api v1.0 is alive!"
+    return render_template("/api/index.html")
 
 @api_api.route("/v1/request_auth", methods=["POST"])
 def api_request_auth():
-    tenant = request.form["tenant"]
+    username = request.form["username"]
     password = request.form["password"]
-    result = authapi.signin(tenant, password)
+    result = authapi.signin(username, password)
     return json_result(0, result)
 
-@api_api.route("/v1/images")
+@api_api.route("/v1/images", methods=["GET"])
 @xtoken_required
 def api_images():
     user = xtoken_user(AuthAPI.getXToken())
@@ -43,7 +45,7 @@ def api_images():
     image: list = deserialize_json(Image, img_db.find({ "uid": user.uuid }))
     return json_result(0, image)
     
-@api_api.route("/v1/containers")
+@api_api.route("/v1/containers", methods=["GET"])
 @xtoken_required
 def api_containers():
     user = xtoken_user(AuthAPI.getXToken())
@@ -51,7 +53,7 @@ def api_containers():
     container: list = deserialize_json(Container, con_db.find({ "uid": user.uuid }))
     return json_result(0, container)
 
-@api_api.route("/v1/image/rm/<uuid:sid>")
+@api_api.route("/v1/image/rm/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_image_rm(sid):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -60,7 +62,7 @@ def api_image_rm(sid):
     DockerImageAPI.delete(image.image_id)
     return json_result(0, "image removed")
 
-@api_api.route("/v1/container/rm/<uuid:sid>")
+@api_api.route("/v1/container/rm/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_container_rm(sid):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -69,7 +71,7 @@ def api_container_rm(sid):
     DockerContainerAPI.remove(container.container_id)
     return json_result(0, "container removed")
 
-@api_api.route("/v1/image/<uuid:sid>")
+@api_api.route("/v1/image/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_image_detail(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -77,7 +79,7 @@ def api_image_detail(sid: uuid.UUID):
     image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     return json_result(0, image)
 
-@api_api.route("/v1/container/<uuid:sid>")
+@api_api.route("/v1/container/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_container_detail(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -85,7 +87,7 @@ def api_container_detail(sid: uuid.UUID):
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     return json_result(0, container)
 
-@api_api.route("/v1/image/run/<uuid:sid>/<int:port>")
+@api_api.route("/v1/image/run/<uuid:sid>/<int:port>", methods=["GET"])
 @xtoken_required
 def api_image_run(sid: uuid.UUID, port: int):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -94,7 +96,7 @@ def api_image_run(sid: uuid.UUID, port: int):
     DockerImageAPI.run(image.tag, "", port)
     return json_result(0, "image run")
 
-@api_api.route("/v1/container/start/<uuid:sid>")
+@api_api.route("/v1/container/start/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_container_start(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -103,7 +105,7 @@ def api_container_start(sid: uuid.UUID):
     DockerContainerAPI.start(container.container_id)
     return json_result(0, "container start")
 
-@api_api.route("/v1/container/stop/<uuid:sid>")
+@api_api.route("/v1/container/stop/<uuid:sid>", methods=["GET"])
 @xtoken_required
 def api_container_stop(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
@@ -112,14 +114,58 @@ def api_container_stop(sid: uuid.UUID):
     DockerContainerAPI.stop(container.container_id)
     return json_result(0, "container stop")
 
-@api_api.route("/v1/directory")
+@api_api.route("/v1/directory", methods=["POST"])
 @xtoken_required
 def api_directory():
-    path = request.args.get("path")
+    path = request.form["path"]
+    if path == None:
+        path = "."
     if "../" in path:
         return redirect("/v1/error")
     user = xtoken_user(AuthAPI.getXToken())
     return fsapi.listing(user.username, path)
+
+@api_api.route("/v1/directory/upload", methods=["POST"])
+@xtoken_required
+def api_directory_upload():
+    path = request.form["path"]
+    data = request.files["data"]
+    if not path or "../" in path:
+        return redirect("/v1/error")
+    user = xtoken_user(AuthAPI.getXToken())
+    return fsapi.write(user.username, path, data)
+
+@api_api.route("/v1/directory/download", methods=["POST"])
+@xtoken_required
+def api_directory_download():
+    path = request.form["path"]
+    if not path or "../" in path:
+        return redirect("/v1/error")
+    user = xtoken_user(AuthAPI.getXToken())
+    return fsapi.read(user.username, path)
+
+@api_api.route("/v1/directory/remove", methods=["POST"])
+@xtoken_required
+def api_directory_remove():
+    path = request.form["path"]
+    if "../" in path:
+        return redirect("/v1/error")
+    user = xtoken_user(AuthAPI.getXToken())
+    return fsapi.rm(user.username, path)
+
+@api_api.route("/v1/directory/removedir", methods=["POST"])
+@xtoken_required
+def api_directory_removedir():
+    path = request.form["path"]
+    if "../" in path:
+        return redirect("/v1/error")
+    user = xtoken_user(AuthAPI.getXToken())
+    return fsapi.rmdir(user.username, path)
+
+@api_api.route("/v1/users", methods=["GET"])
+@admin_required
+def api_users():
+    return json_result(0, CUser.all())
 
 @api_api.route("/v1/error")
 def api_error():
