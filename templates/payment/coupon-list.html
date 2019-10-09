@@ -2,26 +2,36 @@
 {% block content %}
                 <div class="container">
                     <h2>Coupon</h2>
-                    <div class="row">
+                    <div class="row" id="coupon-table">
                         <table border="1">
                             <thead>
                                 <tr>
-                                    <td>coupon</td>
-                                    <td>expire date</td>
-                                    <td>used</td>
+                                    <td class="center-align">coupon</td>
+                                    <td class="center-align">username</td>
+                                    <td class="center-align">used</td>
+                                    <td class="center-align">expire_date</td>
+                                    <td class="center-align">uuid</td>
+                                    <td class="center-align">*</td>
                                 </tr>
                             </thead>
                             <tbody>
+                                {% if not coupons %}
                                 <tr>
-                                    <td>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</td>
-                                    <td>2019-12-31</td>
-                                    <td>False</td>
+                                    <td colspan="6" class="center-align">-</td>
                                 </tr>
-                                {% for cp in coupon %}
+                                {% endif %}
+                                {% for coupon in coupons %}
                                 <tr>
-                                    <td>cp.coupon</td>
-                                    <td>cp.expire_date</td>
-                                    <td>cp.used</td>
+                                    <td class="center-align" id="coupon">{{ coupon.coupon }}</td>
+                                    <td class="center-align" id="username">{{ coupon.username }}</td>
+                                    <td class="center-align" id="used">{{ coupon.used }}</td>
+                                    <td class="center-align" id="expire_date">{{ coupon.expire_date }}</td>
+                                    <td class="center-align" id="uuid">{{ coupon.uuid }}</td>
+                                    <td class="center-align">
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)">
+                                            <i class="small material-icons">close</i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

@@ -23,14 +23,20 @@
                                 {% if not result["is_base"] %}
                                 <tr>
                                     <td>
-                                        <a href="/file/view?path={{ result['parent'] }}">..</a>
+                                        <a href="/file/view?path={{ result['parent'] }}">
+                                            <i class="tiny material-icons">folder</i>
+                                            ..
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endif %}
                                 {% for d in result["dir"] %}
                                 <tr>
                                     <td>
-                                        <a href="/file/view?path={{ result['path'] }}/{{ d }}">{{ d }}</a>
+                                        <a href="/file/view?path={{ result['path'] }}/{{ d }}">
+                                            <i class="tiny material-icons">folder</i>
+                                            {{ d }}
+                                        </a>
                                     </td>
                                     <td></td>
                                 </tr>

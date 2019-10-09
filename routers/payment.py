@@ -38,7 +38,7 @@ def payment_credit_use():
 def payment_coupon():
     return render_template(
         "payment/coupon-list.html",
-        coupon=coupon_api.get(session["username"])
+        coupons=coupon_api.get(session["username"])
     )
 
 @payment_api.route("/payment/coupon/use")

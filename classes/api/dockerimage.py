@@ -1,4 +1,10 @@
 from dockerengine import client
+from flask_pymongo import PyMongo, wrappers
+from database import mongo
+from util import deserialize_json
+
+from models.image import Image
+
 import json, io
 
 class DockerImageAPI(object):
@@ -38,4 +44,11 @@ CMD /etc/init.d/ssh start && /bin/bash -c "while true; do echo 'still alive'; sl
     @staticmethod
     def delete(image_id):
         client.remove_image(image_id)
+        db: wrappers.Collection = mongo.db.images
+        db.delete_one({ "tag": image_id })
         return True
+    
+    def find_by_tag(self, tag):
+        db: wrappers.Collection = mongo.db.images
+        image: Image = deserialize_json(Image, db.find_one({ "tag": tag }))
+        return image

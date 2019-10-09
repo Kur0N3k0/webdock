@@ -21,21 +21,24 @@
             </nav>
         </header>
         <ul id="slide-out" class="sidenav sidenav-fixed blue lighten-5">
-            <li><a class="subheader"><i class="material-icons">Docker</i></a></li>
+            <li><a class="subheader"><i class="material-icons">widgets</i>Docker</a></li>
             <li><a href="/docker/images">Image</a></li>
             <li><a href="/docker/containers">Container</a></li>
             <li><a href="/dockerfile">Dockerfile</a></li>
             <li><div class="divider"></div></li>
-            <li><a class="subheader"><i class="material-icons">User</i></a></li>
+            <li><a class="subheader"><i class="material-icons">person</i>User</a></li>
             <li><a href="/file">File</a></li>
             <li><a href="/payment/coupon">Coupon</a></li>
             <li><a href="/payment">Payment</a></li>
             <li><a href="/api">Api</a></li>
             <li><div class="divider"></div></li>
-            <li><a class="subheader"><i class="material-icons">Admin</i></a></li>
+            {% if session["level"] == 1 %}
+            <li><a class="subheader"><i class="material-icons">laptop</i>Admin</a></li>
             <li><a href="/admin/users">user</a></li>
             <li><a href="/admin/images">image</a></li>
             <li><a href="/admin/containers">container</a></li>
+            <li><a href="/admin/coupon">coupon</a></li>
+            {% endif %}
         </ul>
         <main>
             {% block content %}

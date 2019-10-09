@@ -4,6 +4,8 @@ from flask import Flask, url_for, request, session, render_template, redirect, B
 from flask_pymongo import PyMongo, wrappers
 from flask_uuid import FlaskUUID
 
+from classes.user.user import Users as userAPI
+
 from models.user import User
 from database import mongo
 from util import deserialize_json, login_required
@@ -21,14 +23,11 @@ def signup():
     if "../" in username:
         return render_template("user/signup.html")
 
-    db: wrappers.Collection = mongo.db.users
-    result = db.find_one({ "username": username })
+    result = userAPI.find_by_name(username)
     if result != None:
         return "exist user"
 
-    u_uuid = uuid.uuid4()
-    user = User(username, password, 0, u_uuid)
-    db.insert_one(user.__dict__)
+    u_uuid = userAPI.add(username, password, 0)
 
     session["username"] = username
     session["uuid"] = str(u_uuid)
@@ -49,8 +48,7 @@ def signin():
         username = request.form["username"]
         password = request.form["password"]
 
-        db: wrappers.Collection = mongo.db.users
-        result: User = deserialize_json(User, db.find_one({ "username": username, "password": password }))
+        result = userAPI.signin(username, password)
         if result == None:
             return "<script>alert('user not found'); history.back(-1);</script>"
 

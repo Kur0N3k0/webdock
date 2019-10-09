@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+{% block content %}
+                <div class="container">
+                    <h2>Coupon</h2>
+                    <hr>
+                    <div>
+                        <h5>Coupon Gift</h5>
+                        <div class="row container" id="gen-table">
+                            <table>
+                                <tr>
+                                    <td>username</td>
+                                    <td>
+                                        <input type="text" id="username">
+                                    </td>
+                                    <td class="right-align">
+                                        <a class="waves-effect waves-light btn" onclick="gift(this)">
+                                            <i class="small material-icons">add</i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <hr>
+                    <div>
+                        <h5>List</h5>
+                        <div class="row" id="coupon-table">
+                            <table border="1">
+                                <thead>
+                                    <tr>
+                                        <td class="center-align">coupon</td>
+                                        <td class="center-align">username</td>
+                                        <td class="center-align">used</td>
+                                        <td class="center-align">expire_date</td>
+                                        <td class="center-align">uuid</td>
+                                        <td class="center-align">*</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if not coupons %}
+                                    <tr>
+                                        <td colspan="6" class="center-align">-</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% for coupon in coupons %}
+                                    <tr>
+                                        <td class="center-align" id="coupon">{{ coupon.coupon }}</td>
+                                        <td class="center-align" id="username">{{ coupon.username }}</td>
+                                        <td class="center-align" id="used">{{ coupon.used }}</td>
+                                        <td class="center-align" id="expire_date">{{ coupon.expire_date }}</td>
+                                        <td class="center-align" id="uuid">{{ coupon.uuid }}</td>
+                                        <td class="center-align">
+                                            <a class="waves-effect waves-light btn" onclick="remove(this)">
+                                                <i class="small material-icons">close</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    $(function(){
+                        gift = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            username = $(parent).find("#username").val();
+                            $.post("/admin/coupon/give", {
+                                "username": username
+                            }).done((res) => {
+                                result = JSON.parse(res);
+                                if(result["code"] == 0) location.reload();
+                                else M.toast({html: result["msg"]});
+                            });
+                        }
+
+                        remove = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            username = $(parent).find("#username").text();
+                            coupon = $(parent).find("#coupon").text();
+                            $.post("/admin/coupon/remove",{
+                                "username": username,
+                                "coupon": coupon
+                            }).done((res) => {
+                                result = JSON.parse(res);
+                                if(result["code"] === 0) location.reload();
+                                else M.toast({html: result["msg"]});
+                            });
+                        }
+
+                        gparent_remove = (obj) => {
+                            let parent = $(obj).parent().parent()[0];
+                            $(parent).remove();
+                        }
+                    });
+                </script>
+{% endblock %}
