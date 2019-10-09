@@ -9,6 +9,7 @@ import threading, time
 
 class DockerDaemon(Daemon):
     queue = []
+    idx = 0
     def __init__(self):
         super()
         self.running = False

@@ -23,7 +23,7 @@ class PaymentDaemon(Daemon):
 
 def payment_worker(daemon: PaymentDaemon):
     while daemon.running:
-        if daemon.queue.qsize() < 0:
+        if len(daemon.queue) < 0:
             continue
         
         time.sleep(10)

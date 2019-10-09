@@ -30,13 +30,19 @@
                                     <td class="center-align" id="status_{{ container.short_id }}">{{ container.status }}</td>
                                     <td class="center-align">
                                         {% if container.status != "start" %}
-                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-shortid="{{ container.short_id }}">Start</a>
+                                        <a class="waves-effect waves-light btn" onclick="start(this)" data-shortid="{{ container.short_id }}">
+                                            <i class="small material-icons">play_arrow</i>
+                                        </a>
                                         {% else %}
-                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-shortid="{{ container.short_id }}">Stop</a>
+                                        <a class="waves-effect waves-light btn" onclick="stop(this)" data-shortid="{{ container.short_id }}">
+                                            <i class="small material-icons">stop</i>
+                                        </a>
                                         {% endif %}
                                     </td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-shortid="{{ container.short_id }}">Remove</a>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-shortid="{{ container.short_id }}">
+                                            <i class="small material-icons">close</i>
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}

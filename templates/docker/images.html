@@ -29,10 +29,14 @@
                                     <td class="center-align">{{ image.uuid }}</td>
                                     <td class="center-align" id="status_{{ image.uuid }}">{{ image.status }}</td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="run(this)" data-uuid="{{ image.uuid }}">Run</a>
+                                        <a class="waves-effect waves-light btn" onclick="run(this)" data-uuid="{{ image.uuid }}">
+                                            <i class="small material-icons">play_arrow</i>
+                                        </a>
                                     </td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ image.uuid }}">Remove</a>
+                                        <a class="waves-effect waves-light btn" onclick="remove(this)" data-uuid="{{ image.uuid }}">
+                                            <i class="small material-icons">close</i>
+                                        </a>
                                     </td>
                                 </tr>
                                 <tr class="hide" id="{{ image.uuid }}">

@@ -28,7 +28,9 @@
                                     <td class="center-align">{{ dockerfile.uuid }}</td>
                                     <td class="center-align">{{ dockerfile.date }}</td>
                                     <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ dockerfile.uuid }}">Build</a>
+                                        <a class="waves-effect waves-light btn" onclick="build(this)" data-uuid="{{ dockerfile.uuid }}">
+                                            <i class="small material-icons">build</i>
+                                        </a>
                                     </td>
                                 </tr>
                                 <tr class="hide" id="{{ dockerfile.uuid }}">

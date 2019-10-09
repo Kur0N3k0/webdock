@@ -9,9 +9,11 @@ from classes.payment.payment import Payment
 from classes.payment.coupon import Coupon
 from classes.payment.creditcard import CreditCard
 from util import deserialize_json, login_required, json_result
+from daemons import payment_daemon
 
 payment_api = Blueprint("payment_api", __name__)
 coupon_api = Coupon()
+payment_daemon.start()
 
 @payment_api.route("/payment")
 @payment_api.route("/payment/index")
@@ -36,9 +38,15 @@ def payment_credit_use():
 @payment_api.route("/payment/coupon/list")
 @login_required
 def payment_coupon():
+    coupons = coupon_api.get(session["username"])
+    r = [ c.used for c in coupons ]
+    used_cnt = r.count(True)
+    noused_cnt = r.count(False)
     return render_template(
         "payment/coupon-list.html",
-        coupons=coupon_api.get(session["username"])
+        coupons=coupons,
+        used_cnt=used_cnt,
+        noused_cnt=noused_cnt
     )
 
 @payment_api.route("/payment/coupon/use")

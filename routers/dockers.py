@@ -13,9 +13,9 @@ from models.container import Container
 from models.dockerfile import Dockerfile
 from database import mongo
 from util import deserialize_json, login_required, randomString, error, json_result
+from daemons import docker_daemon
 
 docker_api = Blueprint("docker_api", __name__)
-docker_daemon = DockerDaemon()
 docker_daemon.start()
 
 @docker_api.route("/docker", methods=["GET"])
