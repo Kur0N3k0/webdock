@@ -11,7 +11,7 @@ from classes.api.dockerimage import DockerImageAPI
 from classes.api.dockercontainer import DockerContainerAPI
 from classes.api.filesystem import FilesystemAPI
 
-from classes.user.user import User as CUser
+from classes.user.user import Users
 
 from models.user import User
 from models.image import Image
@@ -151,7 +151,7 @@ def api_directory_remove():
     if "../" in path:
         return redirect("/v1/error")
     user = xtoken_user(AuthAPI.getXToken())
-    return fsapi.rm(user.username, path)
+    return fsapi.rm(user.username + "/" + path)
 
 @api_api.route("/v1/directory/removedir", methods=["POST"])
 @xtoken_required
@@ -165,7 +165,7 @@ def api_directory_removedir():
 @api_api.route("/v1/users", methods=["GET"])
 @admin_required
 def api_users():
-    return json_result(0, CUser.all())
+    return json_result(0, Users.all())
 
 @api_api.route("/v1/error")
 def api_error():
