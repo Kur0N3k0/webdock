@@ -16,7 +16,7 @@
                             <thead>
                                 <tr>
                                     <td>filename</td>
-                                    <td>update</td>
+                                    <td>*</td>
                                 </tr>
                             </thead>
                             <tbody>
@@ -28,6 +28,7 @@
                                             ..
                                         </a>
                                     </td>
+                                    <td></td>
                                 </tr>
                                 {% endif %}
                                 {% for d in result["dir"] %}
@@ -38,7 +39,11 @@
                                             {{ d }}
                                         </a>
                                     </td>
-                                    <td></td>
+                                    <td>
+                                        <a href="#" onclick="remove(this, 'folder')" data-path="{{ result['path'] }}/{{ d }}">
+                                            <i class="small material-icons">close</i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                                 {% for f in result["file"] %}
@@ -46,7 +51,11 @@
                                     <td>
                                         <a href="/file/view?path={{ result['path'] }}/{{ f }}">{{ f }}</a>
                                     </td>
-                                    <td></td>
+                                    <td>
+                                        <a href="#" onclick="remove(this, 'file')" data-path="{{ result['path'] }}/{{ f }}">
+                                            <i class="small material-icons">close</i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -90,11 +99,30 @@
                                 data: formData,
                                 type: "POST",
                                 success: function(result) {
-                                    console.log(result);
                                     location.reload();
                                 }
                             });
                         });
+
+                        remove = (obj, type) => {
+                            path = $(obj).attr("data-path");
+                            url = "/file/rm";
+                            data = { "file": path }
+
+                            if(type == 'folder') {
+                                url = "/file/rmdir";
+                                data = { "dir": path }
+                            }
+
+                            $.ajax({
+                                url: url,
+                                type: "POST",
+                                data: data,
+                                success: function(result) {
+                                    location.reload();
+                                }
+                            });
+                        }
 
                         M.textareaAutoResize($('#build-result'));
                     });
