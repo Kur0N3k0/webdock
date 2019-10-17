@@ -11,24 +11,31 @@ class DockerContainerAPI(object):
         return client.containers()
 
     @staticmethod
-    def start(container_id):
-        client.start(container=container_id)
+    def start(container: Container):
+        client.start(container=container.short_id)
+        container.status = "start"
         db: wrappers.Collection = mongo.db.containers
-        db.update({ "short_id": container_id }, { "status": "start" })
+        db.update({ "short_id": container.short_id }, container.__dict__)
         return True
     
     @staticmethod
-    def stop(container_id):
-        client.stop(container=container_id)
+    def stop(container: Container):
         db: wrappers.Collection = mongo.db.containers
-        db.update({ "short_id": container_id }, { "status": "stop" })
+        
+        container.status = "stopping"
+        db.update({ "short_id": container.short_id }, container.__dict__)
+
+        client.stop(container=container.short_id)
+
+        container.status = "stop"
+        db.update({ "short_id": container.short_id }, container.__dict__)
         return True
 
     @staticmethod
-    def remove(container_id):
-        client.remove_container(container=container_id)
+    def remove(container: Container):
+        client.remove_container(container=container.short_id)
         db: wrappers.Collection = mongo.db.containers
-        db.delete_one({ "short_id": container_id })
+        db.delete_one({ "short_id": container.short_id })
         return True
     
     @staticmethod

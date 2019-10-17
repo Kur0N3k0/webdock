@@ -42,7 +42,7 @@ def xtoken_valid(xtoken):
     if not token:
         return False
     
-    if token.expire_date >= time.time():
+    if token.expire_date <= time.time():
         return False
 
     return True

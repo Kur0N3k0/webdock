@@ -50,6 +50,16 @@ def admin_images():
     
     return render_template("/admin/image.html", images=result)
 
+@admin_api.route("/admin/images/run", methods=["POST"])
+@admin_required
+def admin_images_run():
+    tag = request.form["tag"]
+    idx = tag.rfind("-")
+    tag = tag[:idx] + ":" + tag[idx + 1:]
+    docker_api.image.run(tag, "", 22)
+    return json_result(0, "success")
+
+
 @admin_api.route("/admin/images/remove/<tag>")
 @admin_required
 def admin_images_remove(tag: str):

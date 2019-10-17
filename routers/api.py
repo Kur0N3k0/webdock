@@ -35,6 +35,8 @@ def api_request_auth():
     username = request.form["username"]
     password = request.form["password"]
     result = authapi.signin(username, password)
+    if result == "":
+        return json_result(-1, "login failed")
     return json_result(0, result)
 
 @api_api.route("/v1/images", methods=["GET"])
@@ -43,6 +45,8 @@ def api_images():
     user = xtoken_user(AuthAPI.getXToken())
     img_db: wrappers.Collection = mongo.db.images
     image: list = deserialize_json(Image, img_db.find({ "uid": user.uuid }))
+    if len(image) == 0:
+        return json_result(-1, "image not found")
     return json_result(0, image)
     
 @api_api.route("/v1/containers", methods=["GET"])
@@ -51,6 +55,8 @@ def api_containers():
     user = xtoken_user(AuthAPI.getXToken())
     con_db: wrappers.Collection = mongo.db.containers
     container: list = deserialize_json(Container, con_db.find({ "uid": user.uuid }))
+    if len(container) == 0:
+        return json_result(-1, "container not found")
     return json_result(0, container)
 
 @api_api.route("/v1/image/rm/<uuid:sid>", methods=["GET"])
@@ -59,8 +65,11 @@ def api_image_rm(sid):
     user: User = xtoken_user(AuthAPI.getXToken())
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
-    DockerImageAPI.delete(image.image_id)
-    return json_result(0, "image removed")
+    try:
+        DockerImageAPI.delete(image.image_id)
+        return json_result(0, "image removed")
+    except:
+        return json_result(-1, "image not found")
 
 @api_api.route("/v1/container/rm/<uuid:sid>", methods=["GET"])
 @xtoken_required
@@ -68,8 +77,11 @@ def api_container_rm(sid):
     user: User = xtoken_user(AuthAPI.getXToken())
     db: wrappers.Collection = mongo.db.images
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
-    DockerContainerAPI.remove(container.container_id)
-    return json_result(0, "container removed")
+    try:
+        DockerContainerAPI.remove(container.container_id)
+        return json_result(0, "container removed")
+    except:
+        return json_result(-1, "container not found")
 
 @api_api.route("/v1/image/<uuid:sid>", methods=["GET"])
 @xtoken_required
@@ -93,8 +105,11 @@ def api_image_run(sid: uuid.UUID, port: int):
     user: User = xtoken_user(AuthAPI.getXToken())
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
-    DockerImageAPI.run(image.tag, "", port)
-    return json_result(0, "image run")
+    try:
+        DockerImageAPI.run(image.tag, "", port)
+        return json_result(0, "image run")
+    except:
+        return json_result(-1, "image not found")
 
 @api_api.route("/v1/container/start/<uuid:sid>", methods=["GET"])
 @xtoken_required
@@ -102,8 +117,11 @@ def api_container_start(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
     db: wrappers.Collection = mongo.db.images
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
-    DockerContainerAPI.start(container.container_id)
-    return json_result(0, "container start")
+    try:
+        DockerContainerAPI.start(container.container_id)
+        return json_result(0, "container start")
+    except:
+        return json_result(-1, "container not found")
 
 @api_api.route("/v1/container/stop/<uuid:sid>", methods=["GET"])
 @xtoken_required
@@ -111,8 +129,11 @@ def api_container_stop(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
     db: wrappers.Collection = mongo.db.images
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
-    DockerContainerAPI.stop(container.container_id)
-    return json_result(0, "container stop")
+    try:
+        DockerContainerAPI.stop(container.container_id)
+        return json_result(0, "container stop")
+    except:
+        return json_result(-1, "container not found")
 
 @api_api.route("/v1/directory", methods=["POST"])
 @xtoken_required

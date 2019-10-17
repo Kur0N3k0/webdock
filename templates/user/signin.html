@@ -22,4 +22,11 @@
                     </div>
                     <div class="col s3"></div>
                 </div>
+                <script>
+                    $('form input').keydown(function(e) {
+                        if (e.keyCode == 13) {
+                            $('form').submit();
+                        }
+                    });
+                </script>
 {% endblock %}

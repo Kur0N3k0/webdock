@@ -14,7 +14,7 @@ class AuthAPI(API):
         db: wrappers.Collection = mongo.db.users
         result: User = deserialize_json(User, db.find_one({ "username": username, "password": password }))
         if result == None:
-            return "", 401
+            return ""
 
         tenant = result.uuid
         token_db: wrappers.Collection = mongo.db.token
@@ -24,7 +24,7 @@ class AuthAPI(API):
             if result.expire_date + 7200 > t:
                 xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
                 result = Token(tenant, t + 7200, xtoken)
-                token_db.update_one({ "tenant": tenant }, result.__dict__)
+                token_db.update({ "tenant": tenant }, result.__dict__)
         else:
             xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
             result = Token(tenant, t + 7200, xtoken)

@@ -27,7 +27,7 @@
                                 <tr>
                                     <td class="center-align">{{ image.tag }}</td>
                                     <td class="center-align">{{ image.uuid }}</td>
-                                    <td class="center-align" id="status_{{ image.tag }}">{{ image.status }}</td>
+                                    <td class="center-align" id="status">{{ image.status }}</td>
                                     <td class="center-align">
                                         <a class="waves-effect waves-light btn" onclick="run(this)" data-tag="{{ image.tag }}" data-uuid="{{ image.uuid }}">
                                             <i class="small material-icons">play_arrow</i>
@@ -51,7 +51,7 @@
                                                 <label for="ssh-port">ssh port</label>
                                             </div>
                                             <div class="input-field center-align">
-                                                <a class="waves-effect waves-light btn" onclick="run_start('{{ image.uuid }}')">Start</a>
+                                                <a class="waves-effect waves-light btn" onclick="run_start(this)">Start</a>
                                             </div>
                                             <div class="input-field center-align">
                                                 <div class="row">
@@ -90,19 +90,21 @@
 </div>`;
 
                     function run(m) {
+                        obj = $(m).parent().parent().next()[0];
                         const tag = $(m).attr("data-tag");
-                        if($("#" + tag).hasClass("hide")) {
-                            $("#" + tag).removeClass("hide");
+                        if($(obj).hasClass("hide")) {
+                            $(obj).removeClass("hide");
                         } else {
-                            $("#" + tag).addClass("hide");
+                            $(obj).addClass("hide");
                         }
                     }
 
-                    function run_start(tag) {
-                        $("#status_" + tag).html(html);
+                    function run_start(m) {
+                        obj = $(m).parent().parent().parent().parent().prev()[0];
+                        $(obj).html(html);
                         $.post("/docker/run/" + tag, {
-                            tag: $("#" + tag + " #tag").val().replace("-", ":"),
-                            sshport: $("#" + tag + " #ssh-port").val()
+                            tag: $(obj).find("#tag").val().replace("-", ":"),
+                            sshport: $(obj).find("#ssh-port").val()
                         }).done((res) => {
                             const result = JSON.parse(res);
                             msg = "";
@@ -113,8 +115,8 @@
                                     msg += result[item][key];
                                 }
                             }
-                            $("#" + tag + " #build-result").val(msg);
-                            $("#status_" + tag).html("done");
+                            $(obj).find("#build-result").val(msg);
+                            $(obj).find("#status").html("done");
                         });
                     }
 

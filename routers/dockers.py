@@ -157,7 +157,11 @@ def docker_build():
 
     docker_daemon.notify(container_id)
 
-    return json_result(0, result)
+    result_stream = []
+    for item in result:
+        result_stream += [item["stream"]]
+
+    return json_result(0, "".join(result))
 
 @docker_api.route("/docker/run/<uuid:sid>", methods=["POST"])
 @login_required
@@ -168,7 +172,7 @@ def docker_run(sid: uuid.UUID):
     sid = str(sid)
     tag = request.form["tag"]
     sshport = int(request.form["sshport"])
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
 
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": uid, "uuid": sid }))
@@ -177,12 +181,11 @@ def docker_run(sid: uuid.UUID):
     
     container_id = DockerImageAPI.run(tag, "", sshport) # image.run(tag, port=sshport)
     container_uuid = str(uuid.uuid4())
-    DockerContainerAPI.start(container_id)
-
     container = Container(uid, tag, "start", sid, sshport, container_id, container_uuid)
     db: wrappers.Collection = mongo.db.containers
     db.insert_one(container.__dict__)
 
+    DockerContainerAPI.start(container)
     docker_daemon.notify(container_id)
 
     return json_result(0, "Successfully run")
@@ -210,37 +213,23 @@ def docker_rmi(sid: uuid.UUID):
         if status != "stop":
             return json_result(-1, "Docker::Images::rmi failed(container is alive)")
 
-    image.status = "uninstalling"
-    db.update({ "uuid": sid }, image.__dict__)
-
     # delete image
-    #image.delete(image.tag)
     DockerImageAPI.delete(image.tag)
-
-    db.delete_one({ "uuid": sid })
-
     return json_result(0, "Successfully image removed")
 
 @docker_api.route("/docker/start/<uuid:sid>", methods=["GET"])
 @login_required
 def docker_start(sid: uuid.UUID):
     sid = str(sid)
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": uid, "uuid": sid }))
-    if container == None:
-        return "failed"
-    
-    container.status = "run"
-    db.update({ "uid": uid, "uuid": sid }, container.__dict__)
+    if not container:
+        return json_result(-1, "container not found")
 
     # container start & check
     try:
-        DockerContainerAPI.start(container.short_id)
-
-        container.status = "start"
-        db.update({ "uid": uid, "uuid": sid }, container.__dict__)
-
+        DockerContainerAPI.start(container)
         return json_result(0, "container start")
     except:
         container.status = "failed"
@@ -252,24 +241,16 @@ def docker_start(sid: uuid.UUID):
 @login_required
 def docker_stop(sid: uuid.UUID):
     sid = str(sid)
-    uid: uuid.UUID = session.get("uuid")
+    uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": uid, "uuid": sid }))
-    if container == None:
-        return render_template("fail.html")
-    
-    status = container.status
-    container.status = "stopping"
-    db.update({ "uid": uid, "uuid": sid }, container.__dict__)
+    if not container:
+        return json_result(-1, "container not found")
 
     # container stop & check
     try:
-        DockerContainerAPI.stop(container.short_id)
-        container.status = "stop"
-        db.update({ "uid": uid, "uuid": sid }, container.__dict__)
+        DockerContainerAPI.stop(container)
     except:
-        container.status = status
-        db.update({ "uid": uid, "uuid": sid }, container.__dict__)
         return json_result(-1, "Docker::Container::stop failed")
 
     return json_result(0, "container stop")
@@ -281,7 +262,7 @@ def docker_rm(sid: uuid.UUID):
     uid = session.get("uuid")
     db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": uid, "uuid": sid }))
-    if container == None:
+    if not container:
         return render_template("fail.html")
 
     status = container.status
@@ -289,13 +270,7 @@ def docker_rm(sid: uuid.UUID):
     db.update({ "uid": uid, "uuid": sid }, container.__dict__)
 
     try:
-        #container.remove(container.short_id)
-        DockerContainerAPI.remove(container.short_id)
-
-        container.status = "remove"
-        db.update({ "uid": uid, "uuid": sid }, container.__dict__)
-        db.delete_one({ "uid": uid, "uuid": sid})
-
+        DockerContainerAPI.remove(container)
         docker_daemon.notify_remove(container.short_id)
     except:
         container.status = status
