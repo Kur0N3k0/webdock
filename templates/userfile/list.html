@@ -63,36 +63,6 @@
                     </form>
                 </div>
                 <script>
-                    function build(m) {
-                        const uuid = $(m).attr("data-uuid");
-                        if($("#" + uuid).hasClass("hide")) {
-                            $("#" + uuid).removeClass("hide");
-                        } else {
-                            $("#" + uuid).addClass("hide");
-                        }
-                    }
-
-                    function build_start(uuid) {
-                        $.post("/docker/build", {
-                            tag: $("#" + uuid + " #tag").val(),
-                            dockfile: $("#" + uuid + " #dockfile").val(),
-                            rootpass: $("#" + uuid + " #root-pass").val(),
-                            sshport: $("#" + uuid + " #ssh-port").val()
-                        }).done((res) => {
-                            const result = JSON.parse(res)["msg"];
-                            console.log(result);
-                            msg = "";
-                            for(item in result){
-                                for(key in result[item]) {
-                                    if(result[item][key] instanceof Object)
-                                        continue;
-                                    msg += result[item][key];
-                                }
-                            }
-                            $("#" + uuid + " #build-result").val(msg);
-                        });
-                    }
-
                     $(function(){
                         $("#dockerfile-search").click(() => {
                             const search = $("#search").val();
@@ -111,9 +81,10 @@
                             const form = $("#form-file")[0];
                             formData = new FormData(form);
                             formData.append("file", $("#file")[0].files[0]);
+                            formData.append("path", "{{ result['path'] }}")
 
                             $.ajax({
-                                url: "/dockerfile/upload",
+                                url: "/file/upload",
                                 contentType: false,
                                 processData: false,
                                 data: formData,

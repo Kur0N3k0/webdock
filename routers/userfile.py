@@ -86,3 +86,17 @@ def userfile_cp():
     src = base + request.form["src"]
     dst = base + request.form["dst"]
     return filesystem.cp(src, dst)
+
+@userfile_api.route("/file/upload", methods=["POST"])
+def userfile_upload():
+    uid = session.get("uuid")
+    username = session.get("username")
+    path = request.form["path"]
+
+    if "../" in path:
+        return json_result(-1, "invalid path")
+
+    f = request.files["file"]
+    fn = "./upload/" + username + "/" + path + "/" + f.filename
+    f.save(fn)
+    return json_result(0, "success")

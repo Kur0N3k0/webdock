@@ -8,6 +8,7 @@ class Image(json.JSONEncoder):
                 tag: str = "",
                 status: str = "",
                 port:int = 0,
+                short_id: str = "",
                 _uuid: uuid.UUID = ""
     ):
         self.uid = uid
@@ -15,5 +16,5 @@ class Image(json.JSONEncoder):
         self.tag = tag
         self.port = port
         self.status = status
-        self.label = { "uid": uid, "uuid": _uuid }
+        self.short_id = short_id
         self.uuid = _uuid

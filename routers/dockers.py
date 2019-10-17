@@ -125,7 +125,7 @@ def docker_build():
     image_uuid = str(uuid.uuid4())
     container_uuid = str(uuid.uuid4())
 
-    image = Image(uid, "", tag, "installing", sshport, image_uuid)
+    image = Image(uid, "", tag, "installing", sshport, "", image_uuid)
     db: wrappers.Collection = mongo.db.images
     db.insert_one(image.__dict__)
 
@@ -140,6 +140,8 @@ def docker_build():
         image.status = "build"
         db.update({ "uuid": image_uuid }, image.__dict__)
         result, imgs = DockerImageAPI.build(result.path, rootpass, tag)
+        image.short_id = imgs[0]["Id"].split(":")[1]
+        print(result)
 
         image.status = "done"
         db.update({ "uuid": image_uuid }, image.__dict__)
@@ -159,9 +161,12 @@ def docker_build():
 
     result_stream = []
     for item in result:
-        result_stream += [item["stream"]]
+        try:
+            result_stream += [item["stream"]]
+        except:
+            continue
 
-    return json_result(0, "".join(result))
+    return json_result(0, "".join(result_stream))
 
 @docker_api.route("/docker/run/<uuid:sid>", methods=["POST"])
 @login_required
