@@ -97,6 +97,6 @@ def userfile_upload():
         return json_result(-1, "invalid path")
 
     f = request.files["file"]
-    fn = "./upload/" + username + "/" + path + "/" + f.filename
+    fn = userfile_base + username + "/" + path + "/" + f.filename
     f.save(fn)
     return json_result(0, "success")

@@ -21,7 +21,7 @@ class AuthAPI(API):
         result: Token = deserialize_json(Token, token_db.find_one({ "tenant": tenant }))
         t = time.time()
         if result != None:
-            if result.expire_date + 7200 > t:
+            if result.expire_date <= t:
                 xtoken = hashlib.sha1((tenant + str(t)).encode('utf-8')).hexdigest()
                 result = Token(tenant, t + 7200, xtoken)
                 token_db.update({ "tenant": tenant }, result.__dict__)

@@ -43,6 +43,7 @@ def api_request_auth():
 @xtoken_required
 def api_images():
     user = xtoken_user(AuthAPI.getXToken())
+    print(user.uuid)
     img_db: wrappers.Collection = mongo.db.images
     image: list = deserialize_json(Image, img_db.find({ "uid": user.uuid }))
     if len(image) == 0:
