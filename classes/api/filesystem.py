@@ -2,6 +2,7 @@ from classes.api.api import API
 import os
 import glob
 import shutil
+import base64
 from util import json_result
 
 class FilesystemAPI(API):
@@ -79,7 +80,7 @@ class FilesystemAPI(API):
             return False
         with open(rpath, "rb") as f:
             result = f.read()
-        return json_result(0, result)
+        return json_result(0, base64.b64encode(result).decode())
     
     def logging(self):
         pass
