@@ -3,81 +3,56 @@
                 <div class="container">
                     <h2>Payment</h2>
                     <hr>
-                    <h5>Used</h5>
-                    <div class="row" id="coupon-used-table">
-                        <table border="1">
-                            <thead>
+                    <h5>Credit: {{ credit }} yen</h5>
+                    <br>
+                    <div class="container">
+                        <div class="paypal_amount_tbl">
+                            <table>
                                 <tr>
-                                    <td class="center-align">coupon</td>
-                                    <td class="center-align">username</td>
-                                    <td class="center-align">expire_date</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if used_cnt == 0 %}
-                                <tr>
-                                    <td colspan="6" class="center-align">-</td>
-                                </tr>
-                                {% endif %}
-                                {% for coupon in coupons %}
-                                    {% if coupon.used == True %}
-                                <tr>
-                                    <td class="center-align" id="coupon">{{ coupon.coupon }}</td>
-                                    <td class="center-align" id="username">{{ coupon.username }}</td>
-                                    <td class="center-align" id="expire_date">{{ coupon.expire_date }}</td>
-                                </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <h5>Valid</h5>
-                    <div class="row" id="coupon-table">
-                        <table border="1">
-                            <thead>
-                                <tr>
-                                    <td class="center-align">coupon</td>
-                                    <td class="center-align">username</td>
-                                    <td class="center-align">expire_date</td>
-                                    <td class="center-align">*</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if noused_cnt == 0 %}
-                                <tr>
-                                    <td colspan="6" class="center-align">-</td>
-                                </tr>
-                                {% endif %}
-                                {% for coupon in coupons %}
-                                    {% if not coupon.used %}
-                                <tr>
-                                    <td class="center-align" id="coupon">{{ coupon.coupon }}</td>
-                                    <td class="center-align" id="username">{{ coupon.username }}</td>
-                                    <td class="center-align" id="expire_date">{{ coupon.expire_date }}</td>
-                                    <td class="center-align">
-                                        <a class="waves-effect waves-light btn" onclick="use(this)">
-                                            <i class="small material-icons">done</i>
-                                        </a>
+                                    <td>충전금액</td>
+                                    <td>
+                                        <input type="text" name="amount" class="paypal_amount" autofocus>
                                     </td>
+                                    <td>엔</td>
                                 </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                            </table>
+                        </div>
+                        <div class="paypal_buttons"></div>
                     </div>
                 </div>
+                <script src="https://www.paypal.com/sdk/js?currency=JPY&client-id=AU1-vLpUNC1HltoVAMzQJ8eANkXPIXTUZraWqbOD_DWTPzWyAAGAQsRz-V4SFee4wN1yEkg4rxTR-SDU"></script>
                 <script>
                     $(function(){
-                        use = (obj) => {
-                            let parent = $(obj).parent().parent()[0];
-                            coupon = $(parent).find("#coupon");
-                            $.post("/payment/coupon/use",{
-                                "coupon": coupon
+                        paypal.Buttons({
+                            createOrder: function(data, actions) {
+                                let amount = $(".paypal_amount").val();
+                                return actions.order.create({
+                                    purchase_units: [{
+                                        amount: {
+                                            currency_code: "JPY",
+                                            value: amount
+                                        }
+                                    }]
+                                });
+                            },
+                            onApprove: function(data, actions) {
+                                // Capture the funds from the transaction
+                                return actions.order.capture().then(function(details) {
+                                    // Show a success message to your buyer
+                                    //alert('Transaction completed by ' + details.payer.name.given_name);
+                                    //console.log(details);
+                                    order_success(details);
+                                });
+                            }
+                        }).render('.paypal_buttons');
+
+                        order_success = (details) => {
+                            $.post("/payment/paypal/order", {
+                                details: JSON.stringify(details)
                             }).done((res) => {
                                 result = JSON.parse(res);
-                                if(result["code"] == 0) document.reload();
-                                else M.toast({html: result["msg"]});
+                                if(result["code"] == 0)
+                                    location.reload();
                             });
                         }
                     });
