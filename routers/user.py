@@ -12,7 +12,7 @@ from util import deserialize_json, login_required
 
 user_api = Blueprint("user_api", __name__)
 
-#@user_api.route("/signup", methods=["GET", "POST"])
+@user_api.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
         return render_template("user/signup.html")
