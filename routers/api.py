@@ -17,12 +17,14 @@ from models.user import User
 from models.image import Image
 from models.container import Container
 from models.token import Token
+from daemons import docker_daemon
 
-from util import deserialize_json, json_result, xtoken_required, xtoken_valid, xtoken_user, admin_required
+from util import deserialize_json, json_result, xtoken_required, xtoken_valid, xtoken_user, admin_required, randomString
 
 api_api = Blueprint("api_api", __name__, url_prefix="/api")
 authapi = AuthAPI()
 fsapi = FilesystemAPI("./upload/")
+
 
 @api_api.route("/")
 @api_api.route("/v1")
@@ -66,7 +68,7 @@ def api_image_rm(sid):
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     try:
-        DockerImageAPI.delete(image.image_id)
+        DockerImageAPI.delete(image.tag)
         return json_result(0, "image removed")
     except:
         return json_result(-1, "image not found")
@@ -75,10 +77,10 @@ def api_image_rm(sid):
 @xtoken_required
 def api_container_rm(sid):
     user: User = xtoken_user(AuthAPI.getXToken())
-    db: wrappers.Collection = mongo.db.images
+    db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     try:
-        DockerContainerAPI.remove(container.container_id)
+        DockerContainerAPI.remove(container)
         return json_result(0, "container removed")
     except:
         return json_result(-1, "container not found")
@@ -103,10 +105,21 @@ def api_container_detail(sid: uuid.UUID):
 @xtoken_required
 def api_image_run(sid: uuid.UUID, port: int):
     user: User = xtoken_user(AuthAPI.getXToken())
+    
+    tag = randomString(15)
     db: wrappers.Collection = mongo.db.images
     image: Image = deserialize_json(Image, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
+    
     try:
-        DockerImageAPI.run(image.tag, "", port)
+        container_id = DockerImageAPI.run(image.tag, "", port)
+        container_uuid = str(uuid.uuid4())
+        container = Container(user.uuid, tag, "start", str(sid), port, container_id, container_uuid)
+        db: wrappers.Collection = mongo.db.containers
+        db.insert_one(container.__dict__)
+
+        DockerContainerAPI.start(container)
+        docker_daemon.notify(container_id)
+
         return json_result(0, "image run")
     except:
         return json_result(-1, "image not found")
@@ -115,10 +128,10 @@ def api_image_run(sid: uuid.UUID, port: int):
 @xtoken_required
 def api_container_start(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
-    db: wrappers.Collection = mongo.db.images
+    db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     try:
-        DockerContainerAPI.start(container.container_id)
+        DockerContainerAPI.start(container)
         return json_result(0, "container start")
     except:
         return json_result(-1, "container not found")
@@ -127,10 +140,10 @@ def api_container_start(sid: uuid.UUID):
 @xtoken_required
 def api_container_stop(sid: uuid.UUID):
     user: User = xtoken_user(AuthAPI.getXToken())
-    db: wrappers.Collection = mongo.db.images
+    db: wrappers.Collection = mongo.db.containers
     container: Container = deserialize_json(Container, db.find_one({ "uid": user.uuid, "uuid": str(sid) }))
     try:
-        DockerContainerAPI.stop(container.container_id)
+        DockerContainerAPI.stop(container)
         return json_result(0, "container stop")
     except:
         return json_result(-1, "container not found")
